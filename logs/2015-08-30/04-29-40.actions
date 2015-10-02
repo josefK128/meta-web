@@ -1,0 +1,5 @@
+[04:30:28.915] {"t":"narrative","f":"change_scene","a":"stocks"},
+[04:30:43.937] {"t":"narrative","f":"change_state","a":"///i2d-scene:mf2d0///"},
+[04:30:50.746] {"t":"camera3d","f":"tiltflyBy","a":{"r":0.19635,"d":3}},
+[04:30:54.627] {"t":"camera3d","f":"tiltflyBy","a":{"r":-0.19635,"d":3}},
+[04:31:35.440] {"t":"camera3d","f":"yawflyBy","a":{"r":-0.3927,"d":3}},

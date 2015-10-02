@@ -1,0 +1,7 @@
+[00:48:16.152] {"t":"camera3d","f":"panflyTo","a":{"r":-0.7854,"d":3}},
+[00:48:31.146] {"t":"camera3d","f":"lookAt"},
+[00:48:41.144] {"t":"camera3d","f":"panflyTo","a":{"r":-0.7854,"d":3}},
+[00:48:56.147] {"t":"camera3d","f":"home","a":{"d":3}},
+[00:49:11.148] {"t":"camera3d","f":"panflyTo","a":{"r":0,"d":3}},
+[00:49:26.143] {"t":"narrative","f":"change_scene","a":"a"},
+[00:49:36.141] {"t":"narrative","f":"change_scene","a":"a0"},

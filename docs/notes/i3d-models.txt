@@ -1,0 +1,230 @@
+    i3d: {
+      'i3d-empty': {},
+      'i3d-simple': {      // i3d_name - for template-view and model
+        actors: {          // directive attributes
+          csphere: {x:0.0,y:0.0,z:0.0,r:50.0,
+                    visible:true, wireframe:true, 
+                    transparent:false, opacity:1.0, color:"red" },
+          axes: {
+            axes0: {length:3000.0}
+          },
+          billboards: {}
+        }
+      },//i3d-simple
+
+      'metaforms': {
+        actors: { // for i3d-templates, ng-repeat = '(k,v) in actors.*'    
+          // metaforms are named by id of root node - exp 'tree0'
+          // children are named by level-index exp: 0,1/00,01,10/000,...
+          metaforms: {
+            tree0: {form:"i3d-sphere",
+                    x:0.0,y:50.0,z:0.0,r:10.0,
+                    visible:true, wireframe:true, 
+                    transparent:false, opacity:1.0, color:"red",
+                    children:{
+                      0:{form:"i3d-sphere", 
+                         x:-50.0,y:100.0,z:0.0,r:10.0,
+                         visible:true, wireframe:true, 
+                         transparent:false, opacity:1.0, color:"red",
+                         children:{}},
+                      1:{form:"i3d-sphere", 
+                         x:50.0,y:100.0,z:0.0,r:10.0,
+                         visible:true, wireframe:true, 
+                         transparent:false, opacity:1.0, color:"red",
+                         children:{}}
+                    }
+            }
+          },
+          tree1: {form:"i3d-sphere",
+                  x:0.0,y:100.0,z:0.0,r:10.0,
+                  visible:true, wireframe:true, 
+                  transparent:false, opacity:1.0, color:"red",
+                  children:{
+                    0:{form:"i3d-sphere", 
+                       x:-50.0,y:150.0,z:0.0,r:10.0,
+                       visible:true, wireframe:true, 
+                       transparent:false, opacity:1.0, color:"red",
+                       children:{}},
+                    1:{form:"i3d-sphere", 
+                       x:50.0,y:150.0,z:0.0,r:10.0,
+                       visible:true, wireframe:true, 
+                       transparent:false, opacity:1.0, color:"red",
+                       children:{}}
+                  }
+          },
+
+          csphere: {x:0.0,y:0.0,z:0.0,r:50.0,
+                    visible:true, wireframe:true, 
+                    transparent:false, opacity:1.0, color:"red" },
+         
+         axes: {
+           axes0: {length:3000.0}
+         },
+
+          alights: {
+            alight0: {color:"0x222222"}
+          },
+          alight1: {color:"0xff0000"},
+          
+          dlights: {
+            dlight0: {color:"0xffffff", directionx:1, directiony:1, 
+              directionz:1},
+            dlight1: {color:"0x002288", directionx:-1, directiony:-1, 
+              directionz:-1},
+          },
+          dlight2: {color:"0x00ff00", directionx:1, directiony:-1, 
+            directionz:-1},
+
+          grounds: {
+            ground0: {x:0.0, y:-50.0, z:0.0, textureurl:"./images/p2.jpg",
+                      color:"0xffffff", transparent:true,
+                      opacity:0.6, width:50.0, height:50.0 },
+            ground1: {x:0.0, y:0.0, z:0.0, color:"blue", transparent:true,
+                      opacity:0.7, width:50.0, height:50.0 }
+          },
+          ground2: {x:0.0, y:-100.0, z:0.0, color:"red", transparent:true,
+                      opacity:0.7, width:50.0, height:50.0 },
+          
+          cubes: {
+            cube0: {x:-4.0, y:4.0, z:20.0, textureurl:"./images/sky.jpg",
+                    width:4.0, height:4.0, depth:4.0 },
+            cube1: {x:4.0, y:10.0, z:20.0, color:"green", transparent:true,
+                      opacity:0.6, width:4.0, height:4.0, depth:4.0 }
+          },
+          cube2: {x:-4.0, y:14.0, z:20.0, textureurl:"./images/sky.jpg",
+                    width:4.0, height:4.0, depth:4.0 },
+          
+          spheres: {
+            sphere0: {x:20.0, y:4.0, z:4.0, textureurl:"./images/1.png",
+                      r:4.0, wsegments:20.0, hsegments:20.0, color:"white" },
+            sphere1: {x:-20.0, y:4.0, z:4.0, r:4.0, 
+                      wsegments:20.0, hsegments:20.0, 
+                      opacity:0.5, color:"red", transparent:true }
+          },
+          sphere2: {x:-20.0, y:14.0, z:4.0, r:4.0, 
+                      wsegments:20.0, hsegments:20.0, 
+                      opacity:0.5, color:"red", transparent:true },
+
+          bb_singular: {url:"./images/snow_posZ.jpg",x:20,y:20,z:-10,
+              width:50, height:50, aspect:true},
+          billboards: {}
+
+        }//actors
+      },//metaforms
+     
+      'billboards_81': {
+        actors: { // for i3d-templates, ng-repeat = '(k,v) in actors.*'    
+          // metaforms are named by id of root node - exp 'tree0'
+          // children are named by level-index exp: 0,1/00,01,10/000,...
+          metaforms: {
+            tree0: {form:"i3d-sphere",
+                    x:0.0,y:50.0,z:0.0,r:10.0,
+                    visible:true, wireframe:true, 
+                    transparent:false, opacity:1.0, color:"red",
+                    children:{
+                      0:{form:"i3d-sphere", 
+                         x:-50.0,y:100.0,z:0.0,r:10.0,
+                         visible:true, wireframe:true, 
+                         transparent:false, opacity:1.0, color:"red",
+                         children:{}},
+                      1:{form:"i3d-sphere", 
+                         x:50.0,y:100.0,z:0.0,r:10.0,
+                         visible:true, wireframe:true, 
+                         transparent:false, opacity:1.0, color:"red",
+                         children:{}}
+                    }
+            }
+          },
+          tree1: {form:"i3d-sphere",
+                  x:0.0,y:100.0,z:0.0,r:10.0,
+                  visible:true, wireframe:true, 
+                  transparent:false, opacity:1.0, color:"red",
+                  children:{
+                    0:{form:"i3d-sphere", 
+                       x:-50.0,y:150.0,z:0.0,r:10.0,
+                       visible:true, wireframe:true, 
+                       transparent:false, opacity:1.0, color:"red",
+                       children:{}},
+                    1:{form:"i3d-sphere", 
+                       x:50.0,y:150.0,z:0.0,r:10.0,
+                       visible:true, wireframe:true, 
+                       transparent:false, opacity:1.0, color:"red",
+                       children:{}}
+                  }
+          },
+
+          csphere: {x:0.0,y:0.0,z:0.0,r:50.0,
+                    visible:true, wireframe:true, 
+                    transparent:false, opacity:1.0, color:"red" },
+
+          axes: {
+            axes0: {length:3000.0}
+          },
+
+          alights: {
+            alight0: {color:"0x222222"}
+          },
+          alight1: {color:"0xff0000"},
+          
+          dlights: {
+            dlight0: {color:"0xffffff", directionx:1, directiony:1, 
+              directionz:1},
+            dlight1: {color:"0x002288", directionx:-1, directiony:-1, 
+              directionz:-1},
+          },
+          dlight2: {color:"0x00ff00", directionx:1, directiony:-1, 
+            directionz:-1},
+
+          grounds: {
+            ground0: {x:0.0, y:-50.0, z:0.0, textureurl:"./images/p2.jpg",
+                      color:"0xffffff", transparent:true,
+                      opacity:0.6, width:50.0, height:50.0 },
+            ground1: {x:0.0, y:0.0, z:0.0, color:"blue", transparent:true,
+                      opacity:0.7, width:50.0, height:50.0 }
+          },
+          ground2: {x:0.0, y:-100.0, z:0.0, color:"red", transparent:true,
+                      opacity:0.7, width:50.0, height:50.0 },
+          
+          cubes: {
+            cube0: {x:-4.0, y:4.0, z:20.0, textureurl:"./images/sky.jpg",
+                    width:4.0, height:4.0, depth:4.0 },
+            cube1: {x:4.0, y:10.0, z:20.0, color:"green", transparent:true,
+                      opacity:0.6, width:4.0, height:4.0, depth:4.0 }
+          },
+          cube2: {x:-4.0, y:14.0, z:20.0, textureurl:"./images/sky.jpg",
+                    width:4.0, height:4.0, depth:4.0 },
+          
+          spheres: {
+            sphere0: {x:20.0, y:4.0, z:4.0, textureurl:"./images/1.png",
+                      r:4.0, wsegments:20.0, hsegments:20.0, color:"white" },
+            sphere1: {x:-20.0, y:4.0, z:4.0, r:4.0, 
+                      wsegments:20.0, hsegments:20.0, 
+                      opacity:0.5, color:"red", transparent:true }
+          },
+          sphere2: {x:-20.0, y:14.0, z:4.0, r:4.0, 
+                      wsegments:20.0, hsegments:20.0, 
+                      opacity:0.5, color:"red", transparent:true },
+
+          bb_singular: {url:"./images/snow_posZ.jpg",x:20,y:20,z:-10,
+              width:50, height:50, aspect:true},
+          billboards: {  // for ng-repeat = '(k,v) in billboards'
+            // 0,0
+            bb0: {url:"./images/Escher.png",x:0,y:0,z:0,
+              width:50, height:50, aspect:true},
+            bb1: {url:"./images/Escher.png",x:0,y:-100,z:0,
+              width:50, height:50, aspect:true},
+            bb2: {url:"./images/1.png",x:0,y:100,z:0,
+              width:50, height:50, aspect:true},
+            bb3: {url:"./images/p2.jpg",x:-100,y:0,z:0,
+              width:50, height:50, aspect:true},
+            bb4: {url:"./images/sky.jpg",x:100,y:0,z:0,
+              width:50, height:50, aspect:true},
+            bb5: {url:"./images/Escher.png",x:-100,y:100,z:0,
+              width:50, height:50, aspect:true},
+            bb6: {url:"./images/1.png",x:100,y:100,z:0,
+              width:50, height:50, aspect:true},
+            bb7: {url:"./images/p2.jpg",x:-100,y:-100,z:0,
+              width:50, height:50, aspect:true},
+            bb8: {url:"./images/sky.jpg",x:100,y:-100,z:0,
+              width:50, height:50, aspect:true},
+

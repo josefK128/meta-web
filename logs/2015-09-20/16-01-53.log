@@ -1,0 +1,8 @@
+[16:01:58.788] {"t":"camera3d","f":"toggle_csphere","a":false},
+[16:01:58.820] "/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-fixed:scope0",
+[16:01:58.821] "//////shot-fixed:scope0",
+[16:01:58.821] {"delta-t":"camera3d","f":"toggle_csphere","a":false},
+[16:02:04.224] {"t":"camera3d","f":"toggle_csphere","a":true},
+[16:02:04.246] "/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-fixed:scope1",
+[16:02:04.246] "//////shot-fixed:scope1",
+[16:02:04.247] {"delta-t":"camera3d","f":"toggle_csphere","a":true},

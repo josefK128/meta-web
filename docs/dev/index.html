@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>index.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>index.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>index.js </li>
+<li>minimal Express Socket.io websocket server </li>
+<li>run basic receiving server:
+<code>$ node index</code></li>
+<li>run basic receiving server and a trivial broadcast simulation:
+<code>$ node index b</code> <br>
+index cmdline arg can be any char or string</li>
+<li>Express http server uses default port 8080</li>
+<li>Socket.io websocket channels use default port 8081</li>
+<li>present channels are [1] a bi-directional ‘actions’ channel 
+and [2] an in-only ‘log’ channel</li>
+<li>NOTE: @TODO - create a full node-webkit performance studio 
+server implementation </li>
+</ul>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Setup basic express server</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>);
+<span class="hljs-keyword">var</span> path = <span class="hljs-built_in">require</span>(<span class="hljs-string">'path'</span>);
+<span class="hljs-keyword">var</span> express = <span class="hljs-built_in">require</span>(<span class="hljs-string">'express'</span>);
+<span class="hljs-keyword">var</span> app = express();
+<span class="hljs-keyword">var</span> server = <span class="hljs-built_in">require</span>(<span class="hljs-string">'http'</span>).createServer(app);
+<span class="hljs-keyword">var</span> router = express.Router();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Routing - serve static files from port 8080</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>app.use(express.static(path.join(__dirname, <span class="hljs-string">'public_html'</span>)));
+
+app.listen(<span class="hljs-number">8080</span>);
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Express serving static files on tosca:8080/public_html"</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>socket.io websocket channels on port 8081<br></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> io = <span class="hljs-built_in">require</span>(<span class="hljs-string">'socket.io'</span>)(server),
+    port = process.env.PORT || <span class="hljs-number">8081</span>,
+    today = (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().toJSON()).replace(<span class="hljs-regexp">/T.*/</span>, <span class="hljs-string">''</span>),
+    p = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+      <span class="hljs-keyword">return</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().toJSON()).replace(<span class="hljs-regexp">/^.*T/</span>, <span class="hljs-string">''</span>).replace(<span class="hljs-regexp">/Z/</span>,
+      <span class="hljs-string">''</span>).replace(<span class="hljs-regexp">/\..+$/</span>, <span class="hljs-string">''</span>).replace(<span class="hljs-regexp">/:/g</span>,<span class="hljs-string">'-'</span>);
+    },
+    t = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+      <span class="hljs-keyword">return</span> (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().toJSON()).replace(<span class="hljs-regexp">/^.*T/</span>, <span class="hljs-string">''</span>).replace(<span class="hljs-regexp">/Z/</span>, <span class="hljs-string">''</span>);
+    },
+    now,
+    index = <span class="hljs-number">0</span>,
+    argv = process.argv;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>write GMT-today directory (if needed)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">try</span> {
+  fs.mkdirSync(<span class="hljs-string">'./logs/'</span> + today);
+} <span class="hljs-keyword">catch</span>(e) {
+  <span class="hljs-keyword">if</span> ( e.code != <span class="hljs-string">'EEXIST'</span> ) <span class="hljs-keyword">throw</span> e;
+}</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>make connection - handle channel events<br>
+create timestamp-named actions-file and log-file per client</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>io.on(<span class="hljs-string">'connection'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">(socket)</span> </span>{
+  <span class="hljs-keyword">var</span> q,    
+      now = p(), 
+      logfile = <span class="hljs-string">'./logs/'</span> + today + <span class="hljs-string">'/'</span> + now + <span class="hljs-string">'.log'</span>,
+      actionsfile = <span class="hljs-string">'./logs/'</span> + today + <span class="hljs-string">'/'</span> + now + <span class="hljs-string">'.actions'</span>,
+      logfile0 = <span class="hljs-string">'./logs/'</span> + today + <span class="hljs-string">'/'</span> + now + <span class="hljs-string">'.log0'</span>,
+      actionsfile0 = <span class="hljs-string">'./logs/'</span> + today + <span class="hljs-string">'/'</span> + now + <span class="hljs-string">'.actions0'</span>;
+
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"\nclient makes connection index = "</span> + index++);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>diagnostics</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"logfile = "</span> + logfile);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"actionsfile = "</span> + actionsfile);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"logfile0 = "</span> + logfile0);          <span class="hljs-comment">// no timestamp</span>
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"actionsfile0 = "</span> + actionsfile0); <span class="hljs-comment">// no timestamp</span>
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"today = "</span> + today);
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"p() = "</span> + p());
+  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"t() = "</span> + t());
+  argv.forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(a, i)</span></span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"argv["</span> + i + <span class="hljs-string">"] = "</span> + argv[i]);
+  });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>if third argument is given broadcast a trivial simulation of a studio action stream performance (out) </p>
+<ul>
+<li>NOTE: mockserver-service.js broadcasts a much richer simulation</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">if</span>(argv[<span class="hljs-number">2</span>]){
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"server: start score"</span>);
+    setInterval(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"server sending action = {t:'camera2d', f:'zoomflyTo', a: {s:2.0, d:5}}"</span>);
+      socket.emit(<span class="hljs-string">"actions"</span>, {t:<span class="hljs-string">'camera2d'</span>, f:<span class="hljs-string">'zoomflyTo'</span>, a: {s:<span class="hljs-number">2.0</span>, d:<span class="hljs-number">5</span>}});
+      setTimeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"server sending action = {t:'camera2d', f:'zoomflyTo', a: {s:0.5, d:5}}"</span>);
+        socket.emit(<span class="hljs-string">"actions"</span>, {t:<span class="hljs-string">'camera2d'</span>, f:<span class="hljs-string">'zoomflyTo'</span>, a: {s:<span class="hljs-number">0.5</span>, d:<span class="hljs-number">5</span>}});
+      }, <span class="hljs-number">10000</span>);
+    }, <span class="hljs-number">20000</span>);
+  }<span class="hljs-keyword">else</span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"server: not sending score actions"</span>);
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>handler to record actions (in)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  socket.on(<span class="hljs-string">"actions"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(action)</span></span>{
+    fs.appendFile(actionsfile0, <span class="hljs-built_in">JSON</span>.stringify(action) + <span class="hljs-string">",\n"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err)</span> </span>{
+      <span class="hljs-keyword">if</span>(err) {
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">console</span>.log(err);
+      }
+    });
+    fs.appendFile(actionsfile, <span class="hljs-string">"["</span> + t() + <span class="hljs-string">"] "</span> + <span class="hljs-built_in">JSON</span>.stringify(action) + <span class="hljs-string">",\n"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err)</span> </span>{
+      <span class="hljs-keyword">if</span>(err) {
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">console</span>.log(err);
+      }
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"appended action to csv actionsfile = "</span> + actionsfile);
+      <span class="hljs-keyword">if</span>(action.t){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"t: "</span> + action.t);
+      }<span class="hljs-keyword">else</span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"id: "</span> + action.id);
+      }
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"f: "</span> + action.f);
+      <span class="hljs-keyword">for</span>(q <span class="hljs-keyword">in</span> action.a){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"a: a["</span> + q + <span class="hljs-string">"] = "</span> + action.a[q]);
+      }
+    }); 
+  });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>handler to log diagnostics and errors (in)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  socket.on(<span class="hljs-string">"log"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(o)</span></span>{
+    fs.appendFile(logfile0, <span class="hljs-built_in">JSON</span>.stringify(o) + <span class="hljs-string">",\n"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err)</span> </span>{
+      <span class="hljs-keyword">if</span>(err) {
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">console</span>.log(err);
+      }
+    });
+    fs.appendFile(logfile, <span class="hljs-string">"["</span> + t() + <span class="hljs-string">"] "</span> + <span class="hljs-built_in">JSON</span>.stringify(o) + <span class="hljs-string">",\n"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err)</span> </span>{
+      <span class="hljs-keyword">if</span>(err) {
+        <span class="hljs-keyword">return</span> <span class="hljs-built_in">console</span>.log(err);
+      }
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"appended msg to csv logfile = "</span> + logfile);
+    }); 
+  });
+
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>start listening for client connection requests</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>io.listen(port);
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Socket.io channels Server listening at port %d"</span>, port);
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">"sio-server opens publishing channel 'actions'"</span>);
+<span class="hljs-built_in">console</span>.log(<span class="hljs-string">"sio-server opens subscribing channels 'actions', 'log'"</span>);</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

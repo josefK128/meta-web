@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>scene2d0.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="..\..\..\docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>scene2d0.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>scene2d0.js</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+<span class="hljs-keyword">var</span> scene2d0 = {
+          actors: {
+            defsuse: {
+              du0: {form: { id: <span class="hljs-string">"#red-square"</span>,
+                            x: -<span class="hljs-number">10</span>,
+                            y:-<span class="hljs-number">10</span>,
+                            style: <span class="hljs-string">"stroke:blue ; stroke-width:1%"</span>},
+                    transform: <span class="hljs-string">"scale(0.5)"</span>},
+              du1: {form: {id: <span class="hljs-string">"#green-square"</span>,
+                           x: -<span class="hljs-number">20</span>,
+                           y:-<span class="hljs-number">20</span>},
+                    transform: <span class="hljs-string">"scale(1.0)"</span>},
+            },<span class="hljs-comment">//defsuse</span>
+            disks: {
+              d0: {transform:<span class="hljs-string">'translate(20,20)'</span>,
+                   form: {r:<span class="hljs-string">'10'</span>,
+                          fill:<span class="hljs-string">'green'</span>,
+                          <span class="hljs-string">'fill_opacity'</span>:<span class="hljs-string">'0.5'</span>,
+                          stroke:<span class="hljs-string">'orange'</span>,
+                          <span class="hljs-string">'stroke_opacity'</span>:<span class="hljs-string">'0.5'</span>,
+                          <span class="hljs-string">'stroke_width'</span>:<span class="hljs-string">'2'</span>,
+                          <span class="hljs-string">'stroke_dasharray'</span>:<span class="hljs-string">'1,1'</span>}
+              },<span class="hljs-comment">//d0</span>
+              d1: {transform:<span class="hljs-string">'translate(25,25)'</span>,
+                   form: {r:<span class="hljs-string">'5'</span>,
+                          fill:<span class="hljs-string">'violet'</span>,
+                          <span class="hljs-string">'fill_opacity'</span>:<span class="hljs-string">'0.5'</span>,
+                          stroke:<span class="hljs-string">'yellow'</span>,
+                          <span class="hljs-string">'stroke_opacity'</span>:<span class="hljs-string">'0.5'</span>,
+                          <span class="hljs-string">'stroke_width'</span>:<span class="hljs-string">'1'</span>,
+                          <span class="hljs-string">'stroke_dasharray'</span>:<span class="hljs-string">'1,1'</span>}
+              }<span class="hljs-comment">//d1</span>
+            },<span class="hljs-comment">//disks</span>
+            metaforms: {
+              tree0: {form: {id: <span class="hljs-string">"#green-square"</span>},
+                      transform: <span class="hljs-string">'scale(0.5)'</span>,
+                      children: {
+                        <span class="hljs-string">'0'</span>: { form: {id: <span class="hljs-string">"#red-disk"</span>},
+                               transform: <span class="hljs-string">'translate(10,15)'</span>,
+                               children: { 
+                                 <span class="hljs-string">"a"</span> : { form:{id: <span class="hljs-string">"#green-disk"</span>},
+                                         transform: <span class="hljs-string">'translate(-20,-30)'</span>,
+                                         children: { 
+                                           <span class="hljs-string">"a1"</span> : { form:{id: <span class="hljs-string">"#blue-disk"</span>},
+                                                    transform: <span class="hljs-string">'translate(-10,-10)'</span>,
+                                                    children: {}
+                                                  }
+                                         }
+                                       }
+                               }
+                             },
+                        <span class="hljs-string">'1'</span>: { form: {id: <span class="hljs-string">"#blue-disk"</span>},
+                               transform: <span class="hljs-string">'translate(15,25)'</span>,
+                               children: {}
+                             },
+                        <span class="hljs-string">'2'</span>: { form: {id: <span class="hljs-string">"#green-disk"</span>},
+                               transform: <span class="hljs-string">'translate(20,35)'</span>,
+                               children: {}
+                             },
+                        <span class="hljs-string">'3'</span>: { id: <span class="hljs-string">"#blue-disk"</span>,
+                               transform: <span class="hljs-string">'translate(0,0)'</span>,
+                               children: {}
+                             }
+                     }
+              }<span class="hljs-comment">//tree0</span>
+            }<span class="hljs-comment">//metaforms</span>
+          }<span class="hljs-comment">//actors</span>
+};<span class="hljs-comment">//scene2d0</span></pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

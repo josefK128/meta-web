@@ -1,0 +1,3 @@
+[23:01:26.703] {"t":"narrative","f":"change_scene","a":"payments"},
+[23:01:36.686] {"t":"camera3d","f":"panflyBy","a":{"r":-0.7854,"d":4}},
+[23:01:59.814] {"t":"camera2d","f":"rollcutBy","a":{"r":-22.5}},

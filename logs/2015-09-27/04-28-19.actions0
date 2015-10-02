@@ -1,0 +1,4 @@
+{"t":"camera3d","f":"panflyTo","a":{"r":-0.7854,"d":3}},
+{"t":"camera3d","f":"lookAt"},
+{"t":"camera3d","f":"panflyTo","a":{"r":-0.7854,"d":3}},
+{"t":"camera3d","f":"home","a":{"d":3}},

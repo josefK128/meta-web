@@ -1,0 +1,713 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>gulpfile.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>gulpfile.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>gulpfile.js</li>
+<li><p>task automation system</p>
+</li>
+<li><p>possible continuous usage strategies:<br/>
+[1] automated test: ‘watch’ possibly followed by ‘build’ or ‘generate’ <br/>
+[2] manual: traceur/traceur-test etc.; followed by build or generate<br/></p>
+</li>
+<li><p>occasional:<br/>
+[1] check-versions/update and/or, <br/>
+[2] generate and/or, <br/>
+[3] docco</p>
+</li>
+<li><p>NOTE: watch-auto-test writes tested components into appDest</p>
+</li>
+<li>NOTE: build, build-min, update and generate write a tested build 
+into buildDest <br></li>
+<li>NOTE: There is no explicit task ‘task-list’. However cmdline ‘gulp task-list’
+will produce a complete list of tasks and dependencies to stdout 
+(&gt;gulp-task-list.txt for exp.)</li>
+</ul>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>imported task components</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> gulp = <span class="hljs-built_in">require</span>(<span class="hljs-string">"gulp"</span>);
+<span class="hljs-keyword">var</span> changed = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-changed'</span>);
+<span class="hljs-keyword">var</span> jshint = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-jshint'</span>);
+<span class="hljs-keyword">var</span> docco = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-docco'</span>);
+<span class="hljs-keyword">var</span> sass = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-sass'</span>);
+<span class="hljs-keyword">var</span> traceur = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-traceur'</span>);
+<span class="hljs-keyword">var</span> concat = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-concat'</span>);
+<span class="hljs-keyword">var</span> annotate = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-ng-annotate'</span>);
+<span class="hljs-keyword">var</span> sourcemaps = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-sourcemaps'</span>);
+<span class="hljs-keyword">var</span> uglify = <span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-uglify'</span>);
+<span class="hljs-keyword">var</span> exec = <span class="hljs-built_in">require</span>(<span class="hljs-string">'child_process'</span>).exec;
+<span class="hljs-built_in">require</span>(<span class="hljs-string">'gulp-task-list'</span>)(gulp);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>directory/file glob-patterns</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> srcFiles = [
+  <span class="hljs-string">'./app/scripts_es6/*.js'</span>, 
+  <span class="hljs-string">'./app/scripts_es6/**/*.js'</span> 
+];
+<span class="hljs-keyword">var</span> appFiles = [
+  <span class="hljs-string">'./app/scripts/*.js'</span>, 
+  <span class="hljs-string">'./app/scripts/**/*.js'</span> 
+];
+<span class="hljs-keyword">var</span> testFiles = [
+  <span class="hljs-string">'./test/spec_es6/*.js'</span>, 
+];
+<span class="hljs-keyword">var</span> utilFiles = [
+  <span class="hljs-string">'./test/utils_es6/*.js'</span>, 
+];
+<span class="hljs-keyword">var</span> styleFiles = [
+  <span class="hljs-string">'./app/styles/scss/*.scss'</span>
+];
+<span class="hljs-keyword">var</span> devFiles = [
+  <span class="hljs-string">'./gulpfile.js'</span>, 
+  <span class="hljs-string">'./index.js'</span> 
+];
+<span class="hljs-keyword">var</span> templateFiles = [
+  <span class="hljs-string">'./app/views/templates/*.html'</span>, 
+  <span class="hljs-string">'./app/views/templates/**/*.html'</span> 
+];
+<span class="hljs-keyword">var</span> svgDefsFiles = [
+  <span class="hljs-string">'./app/views/svg/*.svg'</span>, 
+  <span class="hljs-string">'./app/views/svg/**/*.svg'</span> 
+];
+<span class="hljs-keyword">var</span> webglDefsFiles = [
+  <span class="hljs-string">'./app/views/webgl/*.html'</span>, 
+  <span class="hljs-string">'./app/views/webgl/**/*.html'</span> 
+];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>write destinations</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> appDest = <span class="hljs-string">'./app/scripts'</span>;
+<span class="hljs-keyword">var</span> buildDest = <span class="hljs-string">'./app/build'</span>;
+<span class="hljs-keyword">var</span> testDest = <span class="hljs-string">'./test/spec'</span>;
+<span class="hljs-keyword">var</span> utilDest = <span class="hljs-string">'./test/utils'</span>;
+<span class="hljs-keyword">var</span> cssDest = <span class="hljs-string">'./app/styles/css'</span>;
+<span class="hljs-keyword">var</span> docDest = <span class="hljs-string">'./docs/scripts'</span>;
+<span class="hljs-keyword">var</span> docTestDest = <span class="hljs-string">'./docs/test/spec'</span>;
+<span class="hljs-keyword">var</span> docUtilDest = <span class="hljs-string">'./docs/test/utils'</span>;
+<span class="hljs-keyword">var</span> docDevDest = <span class="hljs-string">'./docs/dev'</span>;
+<span class="hljs-keyword">var</span> templatesDest = <span class="hljs-string">'./app/views/'</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>default task - test:<br></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">"default"</span>, [<span class="hljs-string">'traceur'</span>]);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>task - watch:<br></p>
+<ul>
+<li>watch srcFiles - apply traceur</li>
+<li>watch testFiles - apply traceur-test</li>
+<li>watch utilFiles - apply traceur-util</li>
+<li>watch styleFiles - apply sass</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'watch'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(event)</span></span>{
+  gulp.watch(srcFiles, [<span class="hljs-string">'traceur'</span>]);
+  gulp.watch(testFiles, [<span class="hljs-string">'traceur-test'</span>]);
+  gulp.watch(utilFiles, [<span class="hljs-string">'traceur-util'</span>]);
+  gulp.watch(styleFiles, [<span class="hljs-string">'sass'</span>]);
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>task - traceur:<br>
+transpile ES6 srcFiles to ES5 appFiles - uses google traceur transpiler</p>
+<ul>
+<li>NOTE: annotate adds [‘dep’, function(dep){}] to angular registration 
+to permit correct minification</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'traceur'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+  <span class="hljs-keyword">return</span> gulp.src(srcFiles)
+    .pipe(jshint())
+    .pipe(jshint.reporter(<span class="hljs-string">'default'</span>))
+    .pipe(annotate())
+    .pipe(sourcemaps.init())
+    .pipe(traceur({sourcemap: <span class="hljs-literal">true</span>, experimental: <span class="hljs-literal">true</span>}))
+    .pipe(sourcemaps.write(<span class="hljs-string">'.'</span>))
+    .pipe(gulp.dest(appDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>task - traceur-test:<br>
+transpile ES6 testFiles to ES5 testFiles - uses google traceur transpiler</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'traceur-test'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+  <span class="hljs-keyword">return</span> gulp.src(testFiles)
+    .pipe(jshint())
+    .pipe(jshint.reporter(<span class="hljs-string">'default'</span>))
+    .pipe(annotate())
+    .pipe(sourcemaps.init())
+    .pipe(traceur({sourcemap: <span class="hljs-literal">true</span>, experimental: <span class="hljs-literal">true</span>}))
+    .pipe(sourcemaps.write(<span class="hljs-string">'.'</span>))
+    .pipe(gulp.dest(testDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>task - traceur-util:<br>
+transpile ES6 utilFiles to ES5 utilFiles - uses google traceur transpiler</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'traceur-util'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+  <span class="hljs-keyword">return</span> gulp.src(utilFiles)
+    .pipe(jshint())
+    .pipe(jshint.reporter(<span class="hljs-string">'default'</span>))
+    .pipe(annotate())
+    .pipe(sourcemaps.init())
+    .pipe(traceur({sourcemap: <span class="hljs-literal">true</span>, experimental: <span class="hljs-literal">true</span>}))
+    .pipe(sourcemaps.write(<span class="hljs-string">'.'</span>))
+    .pipe(gulp.dest(utilDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>task - jshint:<br></p>
+<ul>
+<li>NOTE: jshint is controlled by the options in ‘./.jshintrc’</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">"jshint"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+  gulp.src(srcFiles)
+      .pipe(jshint())
+      .pipe(jshint.reporter(<span class="hljs-string">"default"</span>));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>task - jshint-test:<br></p>
+<ul>
+<li>NOTE: jshint is controlled by the options in ‘./.jshintrc’</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">"jshint-test"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+  gulp.src(testFiles)
+      .pipe(jshint())
+      .pipe(jshint.reporter(<span class="hljs-string">"default"</span>));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>task - sass:<br>
+translates .scss-files to .css-files</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'sass'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+  gulp.src(styleFiles)
+    .pipe(sourcemaps.init())
+    .pipe(sass())
+    .pipe(sourcemaps.write(<span class="hljs-string">'.'</span>))
+    .pipe(gulp.dest(<span class="hljs-string">'./app/styles/css'</span>));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>task - template-cache:<br>
+concatenates individual html/svg/i3d templates into views/templates.html</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'templates'</span>, [<span class="hljs-string">'svg-defs'</span>, <span class="hljs-string">'webgl-defs'</span>], <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+  gulp.src(templateFiles)
+    .pipe(concat(<span class="hljs-string">'templates.html'</span>))
+    .pipe(gulp.dest(templatesDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>task - svg-defs:<br>
+concatenates individual symbols, groups etc. into views/svg-defs.svg</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'svg-defs'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+  gulp.src(svgDefsFiles)
+    .pipe(concat(<span class="hljs-string">'svg-defs.svg'</span>))
+    .pipe(gulp.dest(templatesDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>task - webgl-defs:<br>
+concatenates individual shaders, etc. into views/webgl-defs.js</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'webgl-defs'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+  gulp.src(webglDefsFiles)
+    .pipe(concat(<span class="hljs-string">'webgl-defs.html'</span>))
+    .pipe(gulp.dest(templatesDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>task - docco:<br>
+generate side-by-side: L comments with R source (configurable)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'docco'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+  gulp.src(srcFiles)
+    .pipe(docco())
+    .pipe(gulp.dest(docDest));
+  gulp.src(testFiles)
+    .pipe(docco())
+    .pipe(gulp.dest(docTestDest));
+  gulp.src(utilFiles)
+    .pipe(docco())
+    .pipe(gulp.dest(docUtilDest));
+  gulp.src(devFiles)
+    .pipe(docco())
+    .pipe(gulp.dest(docDevDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>task install:<br>
+installs all project dev-dependencies and then dependencies</p>
+<ul>
+<li>NOTE: assumes that npm is already installed or is global</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'install'</span>, [<span class="hljs-string">'npm-install'</span>, <span class="hljs-string">'bower-install'</span>]);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>task npm-install:<br>
+installs all dev-dependencies listed in package.json for initialization
+writes to ./node_modules</p>
+<ul>
+<li>NOTE: assumes that npm is already installed or is global</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'npm-install'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+  exec(<span class="hljs-string">'npm install --save-dev'</span>);
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>task bower-install:<br>
+installs app-dependencies listed in bower.json 
+writes to directory given in ./.bowerrc (usually ‘./app/libs’) 
+If no directory is given bower writes to ‘./bower_components’</p>
+<ul>
+<li>NOTE: useful policy is to use something like the following in .bowerrc: <pre><code class="lang-javascript">{
+<span class="hljs-string">"directory"</span>: <span class="hljs-string">"./app/libs"</span>, 
+<span class="hljs-string">"json"</span>: <span class="hljs-string">"./bower.json"</span>  
+}
+</code></pre>
+</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'bower-install'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+  exec(<span class="hljs-string">'bower install -S'</span>);
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>task - check-versions:<br>
+check for more recent app-versions then in app/libs, and
+check for more recent dev-versions then in node_modules</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'check-versions'</span>, [<span class="hljs-string">'check-npm'</span>, <span class="hljs-string">'check-bower'</span>]);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>task - check-npm:<br>
+check for more recent dev-versions then in node_modules</p>
+<ul>
+<li>NOTE: —dev checks dev-dependencies also</li>
+<li>NOTE: —depth 0 ignores dependencies of loaded packages</li>
+<li>NOTE: —color should display non-breaking changes in red, breaking in yellow</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'check-npm'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+  exec(<span class="hljs-string">'npm outdated --dev --depth 0 --color'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, stdout, stderr)</span></span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"\n"</span> + stdout);
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"\n"</span> + stderr);
+    <span class="hljs-keyword">if</span>(err){<span class="hljs-built_in">console</span>.log(err);}
+  });
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>task - check-bower:<br>
+check for more recent app-versions then in app/libs</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'check-bower'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+  exec(<span class="hljs-string">'bower list'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(err, stdout, stderr)</span></span>{
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"\n"</span> + stdout);
+    <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"\n"</span> + stderr);
+    <span class="hljs-keyword">if</span>(err){<span class="hljs-built_in">console</span>.log(err);}
+  });
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>task - save-versions:<br>
+copies present bower versions (given by ‘bower list’) to 
+./history/bower-versions.<timestamp>
+copies present npm node_module versions (given by ‘npm list’) to 
+./history/npm-versions.<timestamp>
+Also copies present bower.json, package.json to ./history
+These saves assist recovery if (manually) updating to newer module 
+version introduces an incompatibility</p>
+<ul>
+<li>NOTE: —dev updates dev-dependencies also</li>
+<li>NOTE: —save-dev writes module&amp;version into devDependencies of package.json</li>
+<li>NOTE: —depth 0 ignores dependencies of loaded packages</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'save-versions'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>var timestamp = new Date().toJSON().slice(0,-1).replace(/[:|T]/g,’-‘);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> today = (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().toJSON()).replace(<span class="hljs-regexp">/T.*/</span>, <span class="hljs-string">''</span>),
+      now = (<span class="hljs-keyword">new</span> <span class="hljs-built_in">Date</span>().toJSON()).replace(<span class="hljs-regexp">/^.*T/</span>, <span class="hljs-string">''</span>).replace(<span class="hljs-regexp">/Z/</span>,
+      <span class="hljs-string">''</span>).replace(<span class="hljs-regexp">/\..+$/</span>, <span class="hljs-string">''</span>).replace(<span class="hljs-regexp">/:/g</span>,<span class="hljs-string">'-'</span>),
+      ts = today + <span class="hljs-string">'-'</span> + now;
+      tsdir = <span class="hljs-string">'history/'</span>+ ts;
+  exec(<span class="hljs-string">'mkdir '</span> + ts);
+  exec(<span class="hljs-string">'mv '</span> +ts+ <span class="hljs-string">' history'</span>);
+  setTimeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>exec(‘npm list —depth 0 &gt; history/npm-versions.’ + ts);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    exec(<span class="hljs-string">'bower list &gt; '</span> +tsdir+ <span class="hljs-string">'/bower-updates'</span>);
+    exec(<span class="hljs-string">'cp package.json '</span> +tsdir+ <span class="hljs-string">'/package.json'</span>);
+    exec(<span class="hljs-string">'cp bower.json '</span> +tsdir+ <span class="hljs-string">'/bower.json'</span>);
+    exec(<span class="hljs-string">'gulp check-versions &gt; '</span> +tsdir+ <span class="hljs-string">'/npm-updates'</span>);
+  },<span class="hljs-number">1000</span>);
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>task - generate:<br>
+update versions, automated build, build-min, and document</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'generate'</span>, [<span class="hljs-string">'sass'</span>, <span class="hljs-string">'templates'</span>, <span class="hljs-string">'traceur'</span>, <span class="hljs-string">'build'</span>, <span class="hljs-string">'build-min'</span>, <span class="hljs-string">'docco'</span>]);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>task - build:<br>
+automated build</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'build'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+   <span class="hljs-keyword">return</span> gulp.src(appFiles)
+      .pipe(annotate())
+      .pipe(concat(<span class="hljs-string">'app.js'</span>))
+      .pipe(gulp.dest(buildDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>task - build-min:<br>
+automated build and minification (uglify)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'build-min'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+   <span class="hljs-keyword">return</span> gulp.src(appFiles)
+      .pipe(annotate())
+      .pipe(uglify())
+      .pipe(concat(<span class="hljs-string">'app.min.js'</span>))
+      .pipe(gulp.dest(buildDest));
+});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>task - clean:<br>
+clean ./history and ./logs</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>gulp.task(<span class="hljs-string">'clean'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span> <span class="hljs-params">()</span> </span>{
+  exec(<span class="hljs-string">'rm ./history/*'</span>);
+  exec(<span class="hljs-string">'rm ./logs/*'</span>);
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

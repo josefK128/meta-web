@@ -1,0 +1,31 @@
+// passing (anonymous) function in JSON
+
+
+    // NOTE: var h = new Function("x","y","return x+y;") creates
+    // function h(x,y){return x+y;)
+    // test!
+    console.log("JSON function test:");
+    foo = {
+      i:1,
+      n:1.5,
+      c:[1,2],
+      s:"bar",
+      f:"return 'foo bar';",
+      g:"return arguments[0];",
+      a:"coco",
+      h:["x","y", "return x+y;"]
+    };
+    console.dirxml(foo);
+    json = JSON.stringify(foo);
+    foo = JSON.parse(json);
+    console.dirxml(foo);
+    console.log("foo.f() = " + (new Function('', foo.f))());      //=> 'foo bar'
+    console.log("foo.g() = " + (new Function('', foo.g))(foo.a)); //=> 'coco'
+
+
+    var h = new Function(foo.h[0],foo.h[1],foo.h[2]);
+
+    console.log("h = " + h);            //=> function(x,y){return x+y;}
+
+    console.log("h(5,7) = " + h(5,7));  //=> 12
+

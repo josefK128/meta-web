@@ -1,0 +1,352 @@
+<!-- i3d-axes.svg -->
+<script type="text/ng-template" id="i3d-axes.svg">
+  <i3d-form i3d-template="axes.i3d" ></i3d-form> 
+</script>
+
+
+<!-- i3d-empty.svg -->
+<script type="text/ng-template" id="i3d-empty.svg">
+<g></g>
+</script>
+
+
+<!-- i3d-scene.svg -->
+<script type="text/ng-template" id="i3d-scene.svg">
+
+        <!-- PLURAL spheres.i3d -->
+        <!-- NOTE! metaforms.i3d requires the 'E' case for i3d-form -->
+        <!-- element 'i3d-form' indicates a collection of same-type objects -->
+        <!-- NOTE: non-metaforms can also use attribute form  <g i3d-form...> 
+           but best to use the g-form to indicate hierarchical p-child 
+           transform relations -->
+        <i3d-form i3d-template="spheres.i3d" ></i3d-form> 
+        <i3d-form i3d-template="cubes.i3d" ></i3d-form> 
+        <i3d-form i3d-template="grounds.i3d" ></i3d-form> 
+        <i3d-form i3d-template="billboards.i3d" ></i3d-form> 
+        <i3d-form i3d-template="metaforms.i3d" ></i3d-form>
+        <!-- NOTE: <g i3d-form i3d-template="metaforms.i3d" ></g> FAILS! 
+             However-see below for <g i3d-form for actors.metaforms['tree0']
+             THUS - can declare each metaform in list with <g i3d-form ...> -->
+        <i3d-form i3d-template="ambientlights.i3d" ></i3d-form> 
+        <i3d-form i3d-template="directionallights.i3d" ></i3d-form> 
+        <i3d-form i3d-template="axes.i3d" ></i3d-form> 
+
+        <!-- SINGULAR sphere.i3d -->
+        <!-- element 'g' defines hierarchical p-child transform relations -->
+        <!-- NOTE: can also be <i3d-form ...> but best to indicate 
+                   hierarchical p-child transform relations using g-form -->
+        <g id="singular">>
+          <g i3d-form ng-init="id='csphere'" i3d-template="camerasphere.i3d" ></g>
+          <g i3d-form ng-init="id='sphere2'" i3d-template="sphere.i3d" ></g>
+          <g i3d-form ng-init="id='cube2'" i3d-template="cube.i3d" ></g>
+          <g i3d-form ng-init="id='bb_singular'" i3d-template="billboard.i3d" ></g>
+          <g i3d-form ng-init="id='ground2'" i3d-template="ground.i3d" ></g>
+          <g i3d-form ng-init="node=actors['tree1']" i3d-template="metaform.i3d" ></g>
+          <!-- <g i3d-form ..> attribute form for each metaform in list -->
+          <!-- <g i3d-form ng-init="node=actors.metaforms['tree0']" i3d-template="metaform.i3d" ></g> -->
+          <g i3d-form ng-init="id='alight1'" i3d-template="ambientlight.i3d" ></g> 
+          <g i3d-form ng-init="id='dlight2'" i3d-template="directionallight.i3d" ></g>       
+        </g>
+</script>
+
+<!-- i3d-simple.svg -->
+<script type="text/ng-template" id="i3d-simple.svg">
+  <i3d-form i3d-template="axes.i3d" ></i3d-form> 
+</script>
+
+
+<!-- <i3d:ambientlight ng-init="id='alight'" id={{id}}
+          i3d:color="{{actors[id].color}}"></i3d:ambientlight> -->
+<script type="text/ng-template" id="ambientlights.i3d">
+  <i3d:ambientlight ng-repeat="(id,al) in actors.alights"
+       id={{id}} 
+       i3d:color="{{al.color}}">
+  </i3d:ambientlight>
+</script>
+<!-- ambientlights.i3d -->
+
+
+<!-- axes.i3d -->
+<!-- <i3d:axes id="axes" i3d:length="3000"></i3d:axes> template -->
+<!-- can be used in test to see orientation changes of objects -->
+<script type="text/ng-template" id="axes.i3d">
+  <i3d:axes ng-repeat="(id,axes) in actors.axes">
+       i3d:length="{{axes.length}}">
+  </i3d:axes>
+</script>
+<!-- axes.i3d -->
+
+
+<!-- billboards.i3d -->
+<script type="text/ng-template" id="billboards.i3d">
+  <i3d:billboard ng-repeat="(id,bb) in billboards" 
+       id="{{id}}" 
+       i3d:textureurl="{{bb.url}}" 
+       i3d:x="{{bb.x}}" 
+       i3d:y="{{bb.y}}" 
+       i3d:z="{{bb.z}}" 
+       i3d:width="{{bb.width}}" 
+       i3d:height="{{bb.height}}" 
+       i3d:aspect="{{bb.aspect}}" > 
+  </i3D:billboard> 
+</script> 
+<!-- billboards.i3d -->
+
+
+<!-- children.i3d - for ng-include recursion by metaforms.i3d/meteform.id -->
+<script type="text/ng-template" id="children.i3d">
+  <g ng-if="node.children" >
+    <i3d:metaform ng-repeat="(id,node) in node.children" 
+         id="{{node.id}}" 
+         {{node.form}}
+         i3d:textureurl="{{node.textureurl}}" 
+         i3d:x="{{node.x}}" 
+         i3d:y="{{node.y}}" 
+         i3d:z="{{node.z}}" 
+         i3d:r="{{node.r}}" 
+         i3d:wsegments="{{node.wsegments}}" 
+         i3d:hsegments="{{node.hsegments}}" 
+         i3d:color="{{node.color}}" 
+         i3d:transparent="{{node.transparent}}"
+         i3d:opacity="{{node.opacity}}" 
+         ng-include="'children.i3d'" >
+    </i3d:metaform>
+  </g>
+</script> 
+<!-- children.i3d -->
+
+
+<!-- cubes.i3d -->
+<script type="text/ng-template" id="cubes.i3d">
+  <i3d:cube ng-repeat="(id,cube) in actors.cubes"
+       id="{{id}}" 
+       i3d:textureurl="{{cube.textureurl}}" 
+       i3d:x="{{cube.x}}" 
+       i3d:y="{{cube.y}}" 
+       i3d:z="{{cube.z}}" 
+       i3d:width="{{cube.width}}" 
+       i3d:height="{{cube.height}}" 
+       i3d:depth="{{cube.depth}}" 
+       i3d:color="{{cube.color}}" 
+       i3d:transparent="{{cube.transparent}}"
+       i3d:opacity="{{cube.opacity}}" >
+  </i3d:cube> 
+</script>
+<!-- cubes.i3d -->
+
+
+<!-- directionallights.i3d -->
+<script type="text/ng-template" id="directionallights.i3d">
+  <i3d:directionallight ng-repeat="(id,dl) in actors.dlights"
+       id="{{id}}" 
+       i3d:color="{{dl.color}}" 
+       i3d:directionx="{{dl.directionx}}" 
+       i3d:directiony="{{dl.directiony}}" 
+       i3d:directionz="{{dl.directionz}}" > 
+  </i3d:directionallight>
+</script>
+<!-- directionallights.i3d -->
+
+
+<!-- grounds.i3d -->
+<script type="text/ng-template" id="grounds.i3d">
+  <i3d:ground ng-repeat="(id,ground) in actors.grounds"
+       id="{{id}}" 
+       i3d:textureurl="{{ground.textureurl}}" 
+       i3d:x="{{ground.x}}" 
+       i3d:y="{{ground.y}}" 
+       i3d:z="{{ground.z}}" 
+       i3d:width="{{ground.width}}" 
+       i3d:height="{{ground.height}}" 
+       i3d:color="{{ground.color}}" 
+       i3d:transparent="{{ground.transparent}}"
+       i3d:opacity="{{ground.opacity}}" >
+  </i3d:ground> 
+</script>
+<!-- grounds.i3d -->
+
+
+<!-- metaforms.i3d - roots of metaforms for use in index.html-->
+<!-- NOTE: each metaform instance uses ng-include 'metaform.i3d'
+           This is to recursively render children -->
+<script type="text/ng-template" id="metaforms.i3d">
+  <i3d:metaform ng-repeat="(id, node) in actors.metaforms" 
+       id="{{id}}" 
+       {{node.form}}
+       i3d:textureurl="{{node.textureurl}}" 
+       i3d:x="{{node.x}}" 
+       i3d:y="{{node.y}}" 
+       i3d:z="{{node.z}}" 
+       i3d:r="{{node.r}}" 
+       i3d:wsegments="{{node.wsegments}}" 
+       i3d:hsegments="{{node.hsegments}}" 
+       i3d:color="{{node.color}}" 
+       i3d:transparent="{{node.transparent}}"
+       i3d:opacity="{{node.opacity}}" 
+       ng-include="'children.i3d'" > 
+  </i3d:metaform> 
+</script>
+<!-- metaforms.i3d -->
+
+
+<!-- spheres.i3d -->
+<script type="text/ng-template" id="spheres.i3d">
+  <i3d:sphere ng-repeat="(id,sphere) in actors.spheres" 
+       id="{{id}}" 
+       i3d:textureurl="{{sphere.textureurl}}" 
+       i3d:x="{{sphere.x}}" 
+       i3d:y="{{sphere.y}}" 
+       i3d:z="{{sphere.z}}" 
+       i3d:r="{{sphere.r}}" 
+       i3d:wsegments="{{sphere.wsegments}}" 
+       i3d:height="{{sphere.hsegments}}" 
+       i3d:color="{{sphere.color}}" 
+       i3d:transparent="{{sphere.transparent}}"
+       i3d:opacity="{{sphere.opacity}}"
+  </i3d:sphere> 
+</script>
+<!-- spheres.i3d -->
+
+
+<!-- <i3d:ambientlight -->
+<script type="text/ng-template" id="ambientlight.i3d">
+  <i3d:ambientlight id={{id}} 
+       i3d:color="{{actors[id].color}}">
+  </i3d:ambientlight>
+</script>
+<!-- ambientlight.i3d -->
+
+
+<!-- billboard.i3d -->
+<script type="text/ng-template" id="billboard.i3d">
+  <i3d:billboard  id="{{id}}" 
+       i3d:textureurl="{{actors[id].url}}" 
+       i3d:x="{{actors[id].x}}" 
+       i3d:y="{{actors[id].y}}" 
+       i3d:z="{{actors[id].z}}" 
+       i3d:width="{{actors[id].width}}" 
+       i3d:height="{{actors[id].height}}" 
+       i3d:aspect="{{actors[id].aspect}}" > 
+  </i3D:billboard> 
+</script> 
+<!-- billboard.i3d -->
+
+
+<!-- camersphere.i3d -->
+<!-- NOTE: camerasphere default is visible='FALSE'!!. -->
+<!-- NOTE: These are all the defaults: --> 
+<!-- <i3d:camerasphere id="csphere" 
+                  i3d:x="0.0",
+                  i3d:y="0.0",
+                  i3d:z="0.0",
+                  i3d:r="50.0",
+                  i3d:visible="false" 
+                  i3d:wireframe="true"
+                  i3d:color="red" 
+                  i3d:transparent="false" 
+                  i3d:opacity="1.0" ></i3d:camerasphere> -->
+<!-- Thus a terse equivalent is the following:
+<i3d:camerasphere ng-init="id='csphere'" i3d-template="camerasphere.i3d"> -->
+<!-- for debug/test set visible='true' and whatever other 
+     non-defaults are desired, exp: red wireframe - template -->
+<script type="text/ng-template" id="camerasphere.i3d">
+   <i3d:camerasphere id={{id}} 
+        i3d:x="{{actors[id].x}}"
+        i3d:y="{{actors[id].y}}"
+        i3d:z="{{actors[id].z}}"
+        i3d:r="{{actors[id].r}}"
+        i3d:wireframe="{{actors[id].wireframe}}"
+        i3d:visible="{{actors[id].visible}}"
+        i3d:color="{{actors[id].color}}"
+        i3d:transparent="{{actors[id].transparent}}"
+        i3d:opacity="{{actors[id].opacity}}" >
+   </i3d:camerasphere>
+</script>
+<!-- camerasphere.i3d -->
+
+
+<!-- cube.i3d -->
+<script type="text/ng-template" id="cube.i3d">
+  <i3d:cube id="{{id}}" 
+       i3d:textureurl="{{actors[id].textureurl}}" 
+       i3d:x="{{actors[id].x}}" 
+       i3d:y="{{actors[id].y}}" 
+       i3d:z="{{actors[id].z}}" 
+       i3d:width="{{actors[id].width}}" 
+       i3d:height="{{actors[id].height}}" 
+       i3d:depth="{{actors[id].depth}}" 
+       i3d:color="{{actors[id].color}}" 
+       i3d:transparent="{{actors[id].transparent}}"
+       i3d:opacity="{{actors[id].opacity}}" >
+  </i3d:cube> 
+</script>
+<!-- cube.i3d -->
+
+
+<!-- directionallight.i3d -->
+<script type="text/ng-template" id="directionallight.i3d">
+  <i3d:directionallight id="{{id}}" 
+       i3d:color="{{actors[id].color}}" 
+       i3d:directionx="{{actors[id].directionx}}" 
+       i3d:directiony="{{actors[id].directiony}}" 
+       i3d:directionz="{{actors[id].directionz}}" > 
+  </i3d:directionallight>
+</script>
+<!-- directionallight.i3d -->
+
+
+<!-- ground.i3d -->
+<script type="text/ng-template" id="ground.i3d">
+  <i3d:ground id="{{id}}" 
+       i3d:textureurl="{{actors[id].textureurl}}" 
+       i3d:x="{{actors[id].x}}" 
+       i3d:y="{{actors[id].y}}" 
+       i3d:z="{{actors[id].z}}" 
+       i3d:width="{{actors[id].width}}" 
+       i3d:height="{{actors[id].height}}" 
+       i3d:color="{{actors[id].color}}" 
+       i3d:transparent="{{actors[id].transparent}}"
+       i3d:opacity="{{actors[id].opacity}}" >
+  </i3d:ground> 
+</script>
+<!-- ground.i3d -->
+
+
+<!-- metaform.i3d -->
+<!-- <g i3d-form ng-init="name='sphere2'" i3d-template="sphere.i3d" ></g> --> 
+<script type="text/ng-template" id="metaform.i3d">
+<i3d:metaform 
+       {{node.form}}
+       i3d:textureurl="{{node.textureurl}}" 
+       i3d:x="{{node.x}}" 
+       i3d:y="{{node.y}}" 
+       i3d:z="{{node.z}}" 
+       i3d:r="{{node.r}}" 
+       i3d:wsegments="{{node.wsegments}}" 
+       i3d:hsegments="{{node.hsegments}}" 
+       i3d:color="{{node.color}}" 
+       i3d:transparent="{{node.transparent}}"
+       i3d:opacity="{{node.opacity}}" 
+       ng-include="'children.i3d'" > 
+  </i3d:metaform> 
+</script>
+<!-- metaform.i3d -->
+
+
+<!-- sphere.i3d -->
+<script type="text/ng-template" id="sphere.i3d">
+   <i3d:sphere id={{id}}
+       i3d:textureurl="{{actors[id].textureurl}}" 
+       i3d:x="{{actors[id].x}}" 
+       i3d:y="{{actors[id].y}}" 
+       i3d:z="{{actors[id].z}}" 
+       i3d:r="{{actors[id].r}}" 
+       i3d:wsegments="{{actors[id].wsegments}}" 
+       i3d:height="{{actors[id].hsegments}}" 
+       i3d:color="{{actors[id].color}}" 
+       i3d:transparent="{{actors[id].transparent}}"
+       i3d:opacity="{{actors[id].opacity}}"
+  </i3d:sphere> 
+</script>
+<!-- sphere.i3d -->
+

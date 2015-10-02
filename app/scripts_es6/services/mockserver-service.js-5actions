@@ -1,0 +1,202 @@
+// * mockserver-service.js
+// * simulates studio broadcast of an action sequence 'score' 
+//
+// * @dependencies: Mediator, Log, config, GSAP modules
+//   @param {app/services/mediator-service} Mediator<br>
+//   @param {app/services/log-service} Log<br>
+//   @param {index.html} Angular object value 'config'<br>
+//   @param {GSAP TweenMax} TimelineMax, TweenMax, Quad<br>
+//   @ngInject<br>
+//
+// * NOTE: ngInject is used by ngAnnotate to generate a 
+//   minification-safe injection annotation such as:
+//   ```function($scope) => ['$scope', function($scope){}]```
+//
+// * NOTE: action sequence managed as GSAP timeline
+// * NOTE: action sequence can be interspersed with interactive camera
+//   and both sequence and added interactive shots can be recorded (@server)
+// * NOTE: Mockserver used iff config.mockserver_connect: true
+// * NOTE: to start action sequence hit 'alt-3'
+
+
+angular.module('app').factory('Mockserver', function(Mediator, Log, config,
+  TimelineMax, TweenMax, Quad){
+  "use strict";
+
+  var mockserver,      // closure vars - usable in any execution context
+      log = Log.log,
+      target = {p:0},  // mock animation target with mock tween property
+      timeline,
+      // timeline ctor properties 
+      tlp = {repeat:0, paused:true, tweens:[]},  // -1 => loop, 0 => no repeat
+      delay = function* (){  // generator function for delays
+        let curr = -5;
+        for (;;) {
+          curr = curr + 10 + 5*Math.random();
+          yield curr;
+        }
+      },
+      index = 0,
+
+      // expand as desired - in this case like an animation test
+      // * NOTE: There are three narrative methods which lead to a new url
+      //   and therefore a new application state:
+      //   ```javascript
+      //      narrative.shot(template-name:JSON-model)``` <or><br>
+      //      narrative.shot(template-name:model-name) <br>
+      //      narrative.change_scene(scenename) <br>
+      //      narrative.change_state(absolute_url) <or><br>
+      //      narrative.change_state(delta_url) <br>
+      // * NOTE - do NOT use ```location.url(delta_url)``` - internal ONLY!
+      actions_scene_shot = [
+//        {t:'narrative', f:'change_scene', a:'a'},
+//        {t:'narrative', f:'change_scene', a:'a0'},
+//        {t:'narrative', f:'change_scene', a:'a1'},
+//        {t:'narrative', f:'change_scene', a:'a2'},
+//        {t:'camera3d', f:'dollyflyTo', a:{x:10, y:10, z:-20, d:4}},
+//        {t:'narrative', f:'change_scene', a:'payments'},
+//        {t:'camera3d', f:'toggle_csphere', a:{val:false}},
+//        {t:'camera3d', f:'toggle_csphere', a:{val:true}},
+//        {t:'camera3d', f:'toggle_light', a:{name:'key', val:false}},
+//        {t:'camera3d', f:'toggle_light', a:{name:'fill', val:false}},
+//        {t:'camera3d', f:'toggle_light', a:{name:'back', val:false}},
+//        {t:'camera3d', f:'toggle_light', a:{name:'key', val:true}},
+//        {t:'camera3d', f:'toggle_light', a:{name:'fill', val:true}},
+//        {t:'camera3d', f:'toggle_light', a:{name:'back', val:true}},
+
+        {t:'narrative', f:'change_scene', a:'a'},
+        {t:'narrative', f:'shot', a:`shot-graft:${growa0json}`},
+        {t:'narrative', f:'shot', a:`shot-graft:${growa1json}`},
+        {t:'narrative', f:'shot', a:`shot-graft:${growa2json}`},
+        {t:'camera3d', f:'panflyTo', a:{r:0.7854, d:4}},
+
+//        {t:'narrative', f:'change_scene', a:'footprint'},
+//        {t:'camera3d', f:'panflyTo', a:{r:0.7854, d:4}},
+//        {t:'camera3d', f:'tiltflyTo', a:{r:0.7854, d:4}},
+//        {t:'camera3d', f:'billboardsFaceCamera'},
+//        {t:'camera3d', f:'tiltflyBy', a:{r:-0.7854, d:4}},
+//        {t:'camera3d', f:'panflyBy', a:{r:-0.7854, d:4}},
+//
+//        {t:'narrative', f:'change_scene', a:'circle'},
+//        {t:'narrative', 
+//         f:'change_state',
+//         a:'/circle:/i3d-simple:simple_red/i2d-scene:mf2d0/base-skycube:test_cube/ui-msgbg:/MS'},
+//        {t:'narrative', f:'change_scene', a:'stocks'},
+//        {t:'narrative', f:'change_state', a:'///i2d-scene:mf2d0///'}
+      ],
+
+      actions2d = [
+//        {t:'camera2d', f:'zoomflyBy', a:{s:0.9, d:3}},
+//        {t:'camera2d', f:'zoomflyTo', a:{s:2.0, d:3}},
+//        {t:'camera2d', f:'zoomflyTo', a:{s:0.5, d:3}},
+//        {t:'camera2d', f:'dollyflyTo', a:{x:20, d:3}},
+//        {t:'camera2d', f:'center', a:{d:3}},
+//        {t:'camera2d', f:'home', a:{d:3}},
+//        {t:'camera2d', f:'rollflyTo', a:{r:-90, d:3}},
+//        {t:'camera2d', f:'rollflyBy', a:{r:45, d:3}},
+//        {t:'camera2d', f:'rollflyBy', a:{r:45, d:3}},
+//        {t:'camera2d', f:'dollyflyTo', a:{x:20, d:3}},
+//        {t:'camera2d', f:'dollyflyTo', a:{y:20, d:3}},
+//        {t:'camera2d', f:'dollyflyTo', a:{x:0, d:3}},
+//        {t:'camera2d', f:'dollyflyTo', a:{y:-40, d:3}},
+//        {t:'camera2d', f:'dollyflyTo', a:{x:20, d:3}},
+//        {t:'camera2d', f:'dollyflyTo', a:{x:0, d:3}},
+//        {t:'camera2d', f:'bezier'},
+      ],
+
+      actions3d = [
+//        {t:'camera3d', f:'tiltflyTo', a:{r:-0.7854, d:3}},
+//        {t:'camera3d', f:'panflyTo', a:{r:-0.7854, d:3}},
+//        {t:'camera3d', f:'lookAt'},
+//        {t:'camera3d', f:'dollyflyTo', a:{x:20, y:0, z:0, d:3}},
+//        {t:'camera3d', f:'zoomflyTo', a:{s:0.5, d:3}},
+//        {t:'camera3d', f:'zoomflyTo', a:{s:2.0, d:3}},
+//        {t:'camera3d', f:'dollyflyTo', a:{x:20, y:20, z:-20, d:3}},
+//        {t:'camera3d', f:'zoomflyTo', a:{s:0.5, d:3}},
+//        {t:'camera3d', f:'center', a:{d:3}},
+//        {t:'camera3d', f:'home', a:{d:3}},
+//        {t:'camera3d', f:'bezier'},
+//        {t:'camera3d', f:'panflyBy', a:{r:0.7854, d:3}},
+//        {t:'camera3d', f:'tiltflyBy', a:{r:0.7854, d:3}},
+//        {t:'camera3d', f:'lookAt'},
+//        {t:'camera3d', f:'rollflyTo', a:{r:-1.57, d:4}},
+//        {t:'camera3d', f:'rollflyBy', a:{r:0.3927, d:4}},
+//        {t:'camera3d', f:'rollflyBy', a:{r:0.3927, d:4}},
+//        {t:'camera3d', f:'center', a:{d:3}},
+//        {t:'camera3d', f:'yawflyTo', a:{r:1.57, d:3}},
+//        {t:'camera3d', f:'yawflyBy', a:{r:-0.7854, d:3}},
+//        {t:'camera3d', f:'yawflyBy', a:{r:-0.7854, d:3}},
+//        {t:'camera3d', f:'pitchflyTo', a:{r:-1.57, d:3}},
+//        {t:'camera3d', f:'pitchflyBy', a:{r:0.7854, d:3}},
+//        {t:'camera3d', f:'pitchflyBy', a:{r:0.7854, d:3}},
+//        {t:'camera3d', f:'dollyflyTo', a:{x:20, y:-20, z:-30, d:3}},
+//        {t:'camera3d', f:'dollyflyTo', a:{x:0, y:0, z:30, d:6}},
+//        {t:'camera3d', f:'tiltflyBy', a:{r:0.7854, d:3}},
+//        {t:'camera3d', f:'zoomflyTo', a:{s:2.0, d:3}},
+//        {t:'camera3d', f:'home', a:{d:3}}
+      ],
+      actions = [];
+
+
+      // e2e_test or custom actions-sequence (composed from above subsets)
+      if(config.e2e_test){
+        // config.e2e_spec is an array of spec-objects each containing an action
+        for(let s of config.e2e_spec){
+          actions.push(s.action);
+        }
+      }else{
+        // set or chain-concat action sub-seqs as desired
+        actions = actions.concat(actions_scene_shot).concat(actions2d).concat(actions3d);
+      }
+
+
+
+  class Mockserver {
+    constructor(){
+    }//ctor
+
+    // functions
+    // start score
+    start(){
+      timeline.play();
+    }
+
+    // send score actions to queue for exec
+    queue(action){
+      Mediator.queue.push(action);
+    }
+  }//Mockserver
+
+
+  // return factory object<br>
+  // (redundant) maintenance of Singleton
+  if(!mockserver){
+    mockserver = new Mockserver(); // create Mockserver singleton instance once
+
+
+    // generate timeline
+    for (let n of delay()) {
+      // create one tween for each action<br> 
+      // the action is set to be called in the tween onComplete handler
+      if(index >= actions.length){
+        timeline = new TimelineMax(tlp);
+        break;
+      }
+                
+      // simulate action stream<br> 
+      // ```onComplete: mockserver.queue```<br>
+      // ```onCompleteParams: [{action}]```
+      tlp.tweens.push(TweenMax.to(target, 5, {p:0, 
+         delay:n,
+         immediateRender:false,
+         onComplete: mockserver.queue,
+         onCompleteParams: [actions[index]]
+        }));
+      index += 1;
+    }
+  }
+  return mockserver;         // return Mockserver singleton instance
+});
+
+
+

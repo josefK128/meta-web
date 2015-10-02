@@ -1,0 +1,8 @@
+{"t":"camera3d","f":"panflyBy","a":{"r":-0.19635,"d":3}},
+{"t":"camera3d","f":"tiltflyBy","a":{"r":0.19635,"d":3}},
+{"t":"camera2d","f":"zoomcutBy","a":{"s":0.9}},
+{"t":"camera3d","f":"zoomflyBy","a":{"s":0.9,"d":3}},
+{"t":"camera3d","f":"dollyflyBy","a":{"x":10,"d":3,"y":0,"z":0}},
+{"t":"camera3d","f":"zoomcutBy","a":{"s":1.1111}},
+{"t":"camera3d","f":"rollflyBy","a":{"r":-0.3927,"d":3}},
+{"t":"camera2d","f":"rollcutBy","a":{"r":-22.5}},

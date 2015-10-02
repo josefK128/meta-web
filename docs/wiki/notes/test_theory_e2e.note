@@ -1,0 +1,32 @@
+// Log for utility to build e2e_spec from action sequence
+// in Mockserver run if config.e2e_test = false.
+// NOTE: e2e_test = true => run config.e2e_spec
+// e2e_spec is [{action, abs_url, delta_url, shot}, ...]
+
+
+Mediator.exec:
+{1} ACTION
+335      // {1} log action - for building e2e_spec array
+         Log.log(_action);
+         execute(_action);
+       }
+    }//exec
+  }//class Mediator
+
+
+
+Narrative $locationChangeSuccess:
+{2,3} ABS_URL, DELTA_URL
+216     // {2,3} log abs_url, delta_url - for building e2e_spec array
+        if(!/^\/$/.test(url)){
+          Log.log({t:'stateObj', f:'abs_url', a:`${this.stateObj['abs_url']}`});
+          Log.log({t:'location', f:'url', a:`${url}`});
+        }
+
+
+
+app.onEnter case 'shot':
+{4} SHOT
+230             // {4} log shot - for building e2e_spec array
+                metastate.Log.log({t:'scope', f:'shot', a:scope.shot});
+

@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>app.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>app.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>app.js</li>
+<li>central module for angular components<br></li>
+<li>configures providers and runs initial set-up</li>
+<li>manages metastate system for url-specified compiled template:model view
+component updates animation and cinematography</li>
+<li><p>NOTE: url = scene/i3d(webgl)/i2d(svg)/base(html)/ui/shot</p>
+</li>
+<li><p>@dependency ‘ui-router’ - state-based routing<br>
+@dependency ‘ui-grid’ - ui and table interface to data (future apps)<br>
+@dependency param services, config <br>
+@param {ui.router.state.$stateProvider} $stateProvider<br>
+@param {ui.router.router.$urlRouterProvider} $urlRouterProvider<br>
+@param {ng.$locationProvider} $locationProvider<br>
+@param {ui.router.state.$state} $state<br>
+@param {ng.$rootScope} $templateCache <br>
+@param {ng.$rootScope} $compile <br>
+@param {ng.$rootScope} $timeout<br>
+@param {ng.$rootScope} $rootScope<br>
+@param {services/models-service} Models<br>
+@param {services/camera3d-service} Camera3d<br>
+@param {services/mediator-service} Mediator<br>
+@param {services/log-service} Log<br>
+@param {services/mockserver-service} Mockserver<br>
+@param {app/services/mixin-service} Mixin<br>
+@param {app/services/transform3d-service} Transform3d<br>
+@param {index.html} Angular object value ‘config’<br>
+@ngInject</p>
+</li>
+<li><p>NOTE: Mixin and Transform3d are injected only for possible unit testing</p>
+</li>
+<li><p>NOTE: @ngInject is used by ngAnnotate to generate a 
+minification-safe injection annotation such as:
+<code>function($scope) =&gt; [&#39;$scope&#39;, function($scope){}]</code></p>
+</li>
+<li><p>NOTE: app.js also implements a MutationObserver system of DOM watch for changes 
+in selected properties and children. However at present it is not used<br>
+Preferred is a direct interaction with i3d-components within the canvas 
+‘singularity’ since it is faster and simpler than a two-level event-watch 
+system<br>
+However i3d-components are initially created declaratively via angular directives 
+using svg-templates compiled into the DOM using associated JSON models.<br>
+These i3d actors are then later animated and modified by direct access since the
+webgl objects are accessible by DOM id from an object hierarchy managed by
+Camera3d</p>
+</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+angular.module(<span class="hljs-string">"app"</span>, [<span class="hljs-string">'ui.router'</span>, <span class="hljs-string">'ui.grid'</span>])
+  .config(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($stateProvider, $urlRouterProvider, $locationProvider)</span></span>{
+<span class="hljs-pi">    'use strict'</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>$locationProvider<br>
+enable use of html5Mode urls and browser history api</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    $locationProvider.html5Mode({
+      enabled: <span class="hljs-literal">true</span>,
+      requireBase: <span class="hljs-literal">false</span>,
+      rewriteLinks: <span class="hljs-literal">false</span>
+    });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>$urlRouterProvider<br>
+application state-change via url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    $urlRouterProvider.otherwise(<span class="hljs-string">'/'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>$stateProvider<br>
+association of templates and models with the six components of application
+state:<br></p>
+<ul>
+<li>scene</li>
+<li>i3d</li>
+<li>i2d</li>
+<li>base(html/css)</li>
+<li>ui(html)</li>
+<li><p>shot(cinematography, animation and generative dynamics)<br></p>
+</li>
+<li><p>NOTE: url has form: {scene}/{i3d}/{i2d}/{base}/{ui}/{shot} where each
+component is a template-model pair<br><br></p>
+</li>
+<li><p>NOTE: initial unnamed state has the following implicit properties:
+<code>.state(&#39;&#39;, {
+url: &#39;^&#39;,
+template: &#39;index.html&#39;,
+abstract: true
+})</code></p>
+</li>
+<li><p>NOTE: templateUrl takes one preset param stateParams - not injected</p>
+</li>
+<li><p>NOTE: <code>metastate.onEnter</code> will only be called during the first and all
+subsequent url changes, and not during the initial rendering of index.html<br>
+thus a reference to narrative component-controller will be available from 
+Mediator for each state-change - critical because all models are placed
+on the parent narrative scope.<br></p>
+</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">var</span> metastate = {
+      url: <span class="hljs-string">'^/{scene}/{i3d}/{i2d}/{base}/{ui}/{shot}'</span>,
+      onEnter: () =&gt; {
+        <span class="hljs-keyword">var</span> delta_params = metastate.stateObj.delta_params,
+            scope,
+            name,
+            tuple,
+            template,
+            model,
+            template_view,
+            shot,
+            Camera3d,
+            narrative,
+            node;    <span class="hljs-comment">// named node(s) in shot model</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>fetch reference to narrative component controller-scope</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        narrative = metastate.narrative || 
+          metastate.Mediator.component(<span class="hljs-string">'narrative'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>narrative has method to return reference to its scope<br>
+this scope is used when compiling all dynamic templates since
+it contains all models</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        scope = scope || narrative.scope();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>Camera3d</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        Camera3d = Camera3d || metastate.Camera3d;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>delta templates/models</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-built_in">Object</span>.keys(delta_params)){
+          <span class="hljs-keyword">if</span>(delta_params[p].length &gt; <span class="hljs-number">0</span>){
+            name = delta_params[p];
+            tuple = name.split(<span class="hljs-string">":"</span>);
+            template = tuple[<span class="hljs-number">0</span>] || <span class="hljs-string">""</span>;
+            model = tuple[<span class="hljs-number">1</span>] || <span class="hljs-string">""</span>;
+
+            <span class="hljs-keyword">switch</span>(p){
+              <span class="hljs-keyword">case</span> <span class="hljs-string">'scene'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>at present scene is used only to display scene-name at the
+start of the url<br>
+The scene-model is reserved for possible future uses
+such as audio and/or dialogue</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">break</span>;
+
+              <span class="hljs-keyword">case</span> <span class="hljs-string">'i3d'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>fetch the template_view from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                template_view = metastate.cache.get(<span class="hljs-string">`<span class="hljs-subst">${template}</span>.svg`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>make model available on narrative component scope </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                scope.i3d = metastate.Models.get(<span class="hljs-string">'i3d'</span>, template, model) || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>for(let p of Object.keys(scope.i3d)){
+}</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>change i3d template_view and webgl scene</p>
+<ul>
+<li>NOTE: optionally can pass in procedurally created scene</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                Camera3d.changeTemplateScene(template);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>replace content of ‘#i3d’ template-view container with the
+template_view fetched from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                $(<span class="hljs-string">"#i3d"</span>).html(template_view);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>compile the template_view and all contained directives
+using the model (which is attached at scope.i3d)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                metastate.compile($(<span class="hljs-string">"#i3d"</span>).contents())(scope);
+                <span class="hljs-keyword">break</span>;
+
+              <span class="hljs-keyword">case</span> <span class="hljs-string">'i2d'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>fetch the template_view from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                template_view = metastate.cache.get(<span class="hljs-string">`<span class="hljs-subst">${template}</span>.svg`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>make model available on narrative component scope </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                scope.i2d = metastate.Models.get(<span class="hljs-string">'i2d'</span>, template, model) || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>for(let p of Object.keys(scope.i2d)){
+}</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>replace content of ‘#i2d’ template_view container with the
+template_view fetched from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                $(<span class="hljs-string">"#i2d"</span>).html(template_view);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>compile the template_view and all contained directives
+using the model (which is attached at scope.i2d)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                metastate.compile($(<span class="hljs-string">"#i2d"</span>).contents())(scope);
+                <span class="hljs-keyword">break</span>;
+
+              <span class="hljs-keyword">case</span> <span class="hljs-string">'base'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>fetch the template_view from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                template_view = metastate.cache.get(<span class="hljs-string">`<span class="hljs-subst">${template}</span>.html`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>make model available on narrative component scope </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                scope.base = metastate.Models.get(<span class="hljs-string">'base'</span>,template,model) || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                scope.shot = scope.shot || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>replace content of ‘#base’ template_view container with the 
+template_view fetched from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                $(<span class="hljs-string">"#base"</span>).html(template_view);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>compile the template_view and all contained directives
+using the model (which is attached at scope.base)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                metastate.compile($(<span class="hljs-string">"#base"</span>).contents())(scope);
+                <span class="hljs-keyword">break</span>;
+
+              <span class="hljs-keyword">case</span> <span class="hljs-string">'ui'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>fetch the template_view from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                template_view = metastate.cache.get(<span class="hljs-string">`<span class="hljs-subst">${template}</span>.html`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>make model available on narrative component scope </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                scope.ui = metastate.Models.get(<span class="hljs-string">'ui'</span>, template, model) || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                scope.shot = scope.shot || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>replace content of ‘#ui’ template_view container with the
+template_view fetched from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                $(<span class="hljs-string">"#ui"</span>).html(template_view);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>compile the template_view and all contained directives
+using the model (which is attached at scope.ui)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                metastate.compile($(<span class="hljs-string">"#ui"</span>).contents())(scope);
+                <span class="hljs-keyword">break</span>;
+
+              <span class="hljs-keyword">case</span> <span class="hljs-string">'shot'</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>fetch the template_view from the cache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                template_view = metastate.cache.get(<span class="hljs-string">`<span class="hljs-subst">${template}</span>.svg`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>check the shot-model name:<br>
+If it is ‘scope’ then narrative has already written the model
+to scope.shot<br> 
+If not then fetch the model from Models and place it on
+scope.shot - if no model then set scope.shot = {}<br></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">if</span>(!<span class="hljs-regexp">/^scope/</span>.test(model)){
+                  scope.shot = metastate.Models.get(<span class="hljs-string">'shot'</span>, template, model) || {};
+                }<span class="hljs-keyword">else</span>{
+                  scope.shot = scope.shot || {};
+                }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>process each grafted branch at indicated existing parent
+scope.shot = shot.template.model = {branch0,…} (object)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">let</span> delta = scope.shot.delta || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>console.dir(scope.shot.delta);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+                <span class="hljs-keyword">let</span> branches = delta.branches || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>console.dir(delta.branches);</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>iterate through parents upon which to graft each branch</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-built_in">Object</span>.keys(branches)){
+                  node = $(<span class="hljs-string">`#<span class="hljs-subst">${p}</span>`</span>);  <span class="hljs-comment">// i3d-svg-DOM element</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>add the template_view to the i3d-svgDOM for angular
+compilation by action of directives in the template<br></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                  node.append(template_view);
+
+                  metastate.compile(node.contents())(scope);
+                }<span class="hljs-comment">//branches</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <ul>
+<li>NOTE: graft-parent transforms and timeline animation
+is executed in narrative $stateChangeSuccess event-handler 
+to allow selection of t-direction (fwd/back)<br>
+back =&gt; timeline.reverse(),else fwd by timeline.play()</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">break</span>;
+
+              <span class="hljs-keyword">default</span>:
+            }
+          }<span class="hljs-comment">//changed state components</span>
+        }<span class="hljs-comment">//state components</span>
+      }<span class="hljs-comment">//onEnter()</span>
+    };<span class="hljs-comment">//metastate</span>
+
+    $stateProvider
+    .state(<span class="hljs-string">'delta'</span>, metastate);  
+  }) <span class="hljs-comment">//config</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <ul>
+<li>narrative-component directive is linked and only after app.run, 
+so all services and values needed by ``metastate.onEnter```` must be 
+placed on // metastate to be accessed.<br> 
+Narrative (and hence its scope) can be obtained from Mediator.<br></li>
+<li>Recall that all component controllers register a named reference with 
+Mediator  </li>
+<li>Recall also that narrative has a method scope() which returns its scope</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  .run(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($state, $templateCache, $location, $compile, $timeout, 
+    $rootScope, Models, Camera3d, Mediator, Log, Mockserver, Mixin, Transform3d, 
+    config)</span> </span>{
+<span class="hljs-pi">    'use strict'</span>;
+
+    <span class="hljs-keyword">var</span> observer;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>make $templateCache $location $rootScope $compile $timout $rootScope, 
+Models Mixin Camera3d and Mediator accessible to single state 
+‘delta’ stateConfig object metastate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">var</span> metastate =$state.get(<span class="hljs-string">'delta'</span>);
+    metastate.cache = $templateCache;
+    metastate.location = $location;
+    metastate.compile = $compile;
+    metastate.timeout = $timeout;
+    metastate.Models = Models;
+    metastate.Camera3d = Camera3d;
+    metastate.Mediator = Mediator;
+    metastate.Log = Log;
+    metastate.config = config;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>set up Mutation Observer on media DOM (i2d/i3d branches of ‘zoom_plane’)
+which takes an options object arg containing DOM change handler and
+one or more queries specifying elements and attributes to observer
+and the rootNode DOM ‘branch’ to watch - zoom_plane is media-DOM root </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    observer = <span class="hljs-keyword">new</span> MutationSummary({
+      queries: [{attribute: <span class="hljs-string">'transform'</span>}, {attribute: <span class="hljs-string">'form'</span>}],</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>{attribute: ‘children’}]; - not used</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      rootNode: <span class="hljs-built_in">document</span>.getElementById(<span class="hljs-string">'i3d'</span>),
+      callback : (summaries) =&gt; {
+        <span class="hljs-keyword">var</span> dtransform = summaries[<span class="hljs-number">0</span>],
+            dform = summaries[<span class="hljs-number">1</span>],
+            actor,
+            delta = [],
+            m = <span class="hljs-keyword">new</span> THREE.Matrix4(),
+            mr,
+            mt,
+            ms,
+            k;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>delta-transform</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> node <span class="hljs-keyword">of</span> dtransform.valueChanged){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <p>current value of node.transform - transform</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">let</span> transform = <span class="hljs-built_in">JSON</span>.parse(node.getAttribute(<span class="hljs-string">'transform'</span>));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>previous value of node.form - formp</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">let</span> transformp = <span class="hljs-built_in">JSON</span>.parse(dtransform.getOldAttribute(node, 
+            <span class="hljs-string">'transform'</span>));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>actor</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          actor = Camera3d.actor(node.id);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>execute transform changes on webgl actor</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-built_in">Object</span>.keys(transform)){
+            <span class="hljs-keyword">if</span>(!angular.equals(transform[p], transformp[p])){
+              delta.push({property: p,
+                          previous: transformp[p],
+                          current: transform[p]});
+            }
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>transform matrix component matrices</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">for</span>(k=<span class="hljs-number">0</span>; k&lt;delta.length; k++){
+            <span class="hljs-keyword">let</span> p = delta[k][<span class="hljs-string">'property'</span>];
+            <span class="hljs-keyword">if</span>(p === <span class="hljs-string">'t'</span>){
+              <span class="hljs-keyword">let</span> ta = delta[k][<span class="hljs-string">'current'</span>];
+              <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> i=<span class="hljs-number">0</span>; i&lt;ta.length; i++){
+              }
+              mt = (<span class="hljs-keyword">new</span> THREE.Matrix4()).makeTranslation(ta[<span class="hljs-number">0</span>],ta[<span class="hljs-number">1</span>],ta[<span class="hljs-number">2</span>]);
+            }
+            <span class="hljs-keyword">if</span>(p === <span class="hljs-string">'q'</span>){
+              <span class="hljs-keyword">let</span> qa = delta[k][<span class="hljs-string">'current'</span>];
+              <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> i=<span class="hljs-number">0</span>; i&lt;qa.length; i++){
+              }
+              <span class="hljs-keyword">let</span> q = <span class="hljs-keyword">new</span> THREE.Quaternion(qa[<span class="hljs-number">0</span>],qa[<span class="hljs-number">1</span>],qa[<span class="hljs-number">2</span>],qa[<span class="hljs-number">3</span>]);
+              mr = (<span class="hljs-keyword">new</span> THREE.Matrix4()).makeRotationFromQuaternion(q);
+            }
+            <span class="hljs-keyword">if</span>(p === <span class="hljs-string">'e'</span>){
+              <span class="hljs-keyword">let</span> ea = delta[k][<span class="hljs-string">'current'</span>];
+              <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> i=<span class="hljs-number">0</span>; i&lt;ea.length; i++){
+              }
+              <span class="hljs-keyword">let</span> euler = <span class="hljs-keyword">new</span> THREE.Euler(ea[<span class="hljs-number">0</span>],ea[<span class="hljs-number">1</span>],ea[<span class="hljs-number">2</span>]);<span class="hljs-comment">//default pyr (xyz)</span>
+              <span class="hljs-keyword">let</span> q = (<span class="hljs-keyword">new</span> THREE.Quaternion()).setFromEuler(euler);
+              mr = (<span class="hljs-keyword">new</span> THREE.Matrix4()).makeRotationFromEuler(euler);
+            }
+            <span class="hljs-keyword">if</span>(p === <span class="hljs-string">'s'</span>){
+              <span class="hljs-keyword">let</span> sa = delta[k][<span class="hljs-string">'current'</span>];
+              <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> i=<span class="hljs-number">0</span>; i&lt;sa.length; i++){
+              }
+              ms = (<span class="hljs-keyword">new</span> THREE.Matrix4()).makeScale(sa[<span class="hljs-number">0</span>],sa[<span class="hljs-number">1</span>],sa[<span class="hljs-number">2</span>]);
+            }
+          }<span class="hljs-comment">//delta[k]</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <p>transform matrix - first scale, then rotate, then translate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          m = mt || m;
+          <span class="hljs-keyword">if</span>(mr){
+            m = m.multiply(mr);
+          }
+          <span class="hljs-keyword">if</span>(ms){
+            m = m.multiply(ms);
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <p>transform actor in webgl scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          actor.applyMatrix(m);
+        }<span class="hljs-comment">//dtransform.valueChanged()</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>delta-form</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> node <span class="hljs-keyword">of</span> dform.valueChanged){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>current value of node.transform - transform
+let form = node.getAttribute(‘form’);</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <p>previous value of node.form - formp
+let formp = dform.getOldAttribute(node, ‘form’);</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>@TODO
+use component controllers to modify webgl actor form properties
+NOTE: this may mean remaking a Material!</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        }<span class="hljs-comment">//dform.valueChanged</span>
+      }<span class="hljs-comment">//callback</span>
+    });<span class="hljs-comment">//MutationSummary</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <ul>
+<li>connect to server (if required).</li>
+<li>Server logs e2e cell data (action; abs_url; delta_url; shot)
+and possibly records the action stream (config.record_stream) 
+and also possibly records the interactive-keyboard camera shots 
+(config.record_shots)</li>
+<li>If server is started with non-empty argv[2] ($node index <any char>)
+then the server is expected to broadcast a performance action-sequence</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-keyword">if</span>(config.server_connect){
+      Mediator.connect();
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <ul>
+<li>unit_test and/or e2e_test.</li>
+<li>Listen for alt-3 - possibly start unit test followed by possible 
+Mockserver start if unit tests all pass, or possible e2e_test by itself.</li>
+<li>Mockserver broadcasts (rehearsal) performance actions and/or e2e test. </li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    <span class="hljs-built_in">window</span>.addEventListener(<span class="hljs-string">"keyup"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span></span>{
+      <span class="hljs-keyword">switch</span>(e.keyCode){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>start score-timeline action sequence broadcast<br>
+alt 3 =&gt; start</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">case</span> <span class="hljs-number">51</span>: 
+          <span class="hljs-keyword">if</span>(e.altKey){
+            <span class="hljs-keyword">if</span>(config.unit_test){
+              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"starting unit tests..."</span>);
+              config.unit_spec(Mediator, Mixin, Transform3d, Camera3d, config).then(() =&gt; {
+                <span class="hljs-keyword">if</span>(config.mockserver_connect){
+                  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"starting Mockserver..."</span>);
+                  Mockserver.start();
+                  config.mockserver_connect = <span class="hljs-literal">false</span>;
+                }
+              }).catch((e) =&gt; {
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`unit tests failed: <span class="hljs-subst">${e}</span>`</span>);
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"skipping e2e test..."</span>);
+              });
+            }<span class="hljs-keyword">else</span>{
+              <span class="hljs-keyword">if</span>(config.mockserver_connect){
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"starting Mockserver..."</span>);
+                Mockserver.start();
+                config.mockserver_connect = <span class="hljs-literal">false</span>;
+              }
+            }
+          }
+          <span class="hljs-keyword">break</span>;
+
+        <span class="hljs-keyword">default</span>:
+      }
+   });
+
+  });<span class="hljs-comment">// run</span></pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

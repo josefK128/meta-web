@@ -1,0 +1,29 @@
+[gulp] Using file C:\public_html\test\angular-es6\meta-y\gulpfile.js
+[gulp] Working directory changed to C:\public_html\test\angular-es6\meta-y
+[gulp] Running 'task-list'...
+ Task name        Description                                                                 Dependencies                                      
+ task-list         * gulpfile.js                                                                                                                
+ default           * gulpfile.js                                                              traceur                                           
+ watch             * gulpfile.js                                                                                                                
+ traceur           * gulpfile.js                                                                                                                
+ traceur-test      * gulpfile.js                                                                                                                
+ traceur-util      * gulpfile.js                                                                                                                
+ jshint            * gulpfile.js                                                                                                                
+ jshint-test       * gulpfile.js                                                                                                                
+ sass              translates .scss-files to .css-files                                                                                         
+ templates         concatenates individual html/svg/i3d templates into views/templates.html   svg-defs, webgl-defs                              
+ svg-defs          concatenates individual symbols, groups etc. into views/svg-defs.svg                                                         
+ webgl-defs        concatenates individual shaders, etc. into views/webgl-defs.js                                                               
+ docco             * gulpfile.js                                                                                                                
+ install           * gulpfile.js                                                              npm-install, bower-install                        
+ npm-install       * gulpfile.js                                                                                                                
+ bower-install     * gulpfile.js                                                                                                                
+ check-versions    * gulpfile.js                                                              check-npm, check-bower                            
+ check-npm         * gulpfile.js                                                                                                                
+ check-bower       * gulpfile.js                                                                                                                
+ save-versions     * gulpfile.js                                                                                                                
+ generate          * gulpfile.js                                                              sass, templates, traceur, build, build-min, docco 
+ build             automated build                                                                                                              
+ build-min         automated build and minification (uglify)                                                                                    
+ clean             clean ./history and ./logs                                                                                                   
+[gulp] Finished 'task-list' in 5.22 ms

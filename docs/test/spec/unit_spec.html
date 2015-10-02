@@ -1,0 +1,2414 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>unit_spec.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>unit_spec.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>unit_spec.js</li>
+<li><p>tests intra-state functions - functions not causing state change
+but used by other actions causing state change</p>
+</li>
+<li><p>@dependencies: components to be tested, config, three.js
+@param {app/services/mediator-service} Mediator<br>
+@param {app/services/mixin-service} Mixin<br>
+@param {app/services/transform3d-service} Transform3d<br>
+@param {app/services/camera3d-service} Camera3d<br>
+@param {index.html} Angular object value ‘config’<br></p>
+</li>
+<li><p>NOTE: all args but components to be unit-tested</p>
+</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+<span class="hljs-keyword">var</span> unit_spec = (Mediator, Mixin, Transform3d, Camera3d, config) =&gt; {
+  <span class="hljs-string">"use strict"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>closure vars for tests</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> test_mediator = <span class="hljs-literal">true</span>,   <span class="hljs-comment">// control span of testing</span>
+      test_mixin = <span class="hljs-literal">true</span>,
+      test_t3d = <span class="hljs-literal">true</span>,
+      test_c3d = <span class="hljs-literal">true</span>,
+      tests = <span class="hljs-number">0</span>,
+      failed = <span class="hljs-number">0</span>,
+
+      test = {                <span class="hljs-comment">// suite of unit tests</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <ul>
+<li>Camera3d.lookAt</li>
+<li>NOTE: expect unit tests to be run on opening scene, or any scene
+such that the camerasphere is at (0,0,0)</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        c3d() {
+          <span class="hljs-keyword">var</span> tests = <span class="hljs-number">0</span>,
+              failed = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>test case1</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Camera3d.lookAt:test case1"</span>);
+          <span class="hljs-keyword">let</span> r = Camera3d.lookAt(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>);
+          tests++;
+          <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Array</span>.isArray(r)){
+            tests++;
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> e <span class="hljs-keyword">of</span> r){
+              <span class="hljs-keyword">if</span>(e!==<span class="hljs-number">0</span>){
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!C3d.lookAt:expected array of three zeros: r=<span class="hljs-subst">${r}</span>`</span>);
+                failed++;
+                <span class="hljs-keyword">break</span>;
+              }
+            }
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!C3d.lookAt:expected array return from camera3d.lookAt(0,0,0): r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>test case2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Camera3d.lookAt:test case2"</span>);
+          r = Camera3d.lookAt([<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>]);
+          tests++;
+          <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Array</span>.isArray(r)){
+            tests++;
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> e <span class="hljs-keyword">of</span> r){
+              <span class="hljs-keyword">if</span>(e!==<span class="hljs-number">1</span>){
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!C3d.lookAt:expected array of three ones: r=<span class="hljs-subst">${r}</span>`</span>);
+                failed++;
+                <span class="hljs-keyword">break</span>;
+              }
+            }
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!C3d.lookAt:expected array return from camera3d.lookAt([1,1,1]): r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>test case3</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Camera3d.lookAt:test case3"</span>);
+          r = Camera3d.lookAt();
+          tests++;
+          <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Array</span>.isArray(r)){
+            tests++;
+            <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> e <span class="hljs-keyword">of</span> r){
+              <span class="hljs-keyword">if</span>(e!==<span class="hljs-number">0</span>){
+                <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!C3d.lookAt:expected array of three zeros: r=<span class="hljs-subst">${r}</span>`</span>);
+                failed++;
+                <span class="hljs-keyword">break</span>;
+              }
+            }
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!C3d.lookAtexpected array return from camera3d.lookAt(): r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>test case4</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Camera3d.lookAt:test case4"</span>);
+          r = Camera3d.lookAt(<span class="hljs-string">'camera'</span>);
+          tests++;
+          <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Array</span>.isArray(r)){
+            tests++;
+            <span class="hljs-keyword">if</span>(r[<span class="hljs-number">0</span>]!==<span class="hljs-number">0</span> || r[<span class="hljs-number">1</span>]!==<span class="hljs-number">0</span> || r[<span class="hljs-number">2</span>]!==<span class="hljs-number">50</span>){
+              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!C3d.lookAt:expected array [0,0,50]: r=<span class="hljs-subst">${r}</span>`</span>);
+              failed++;
+            }
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!C3d.lookAt:expected array return from camera3d.lookAt(): r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>report Camera3d results</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">return</span> {te:tests, f:failed};
+        },<span class="hljs-comment">//c3d()</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <ul>
+<li>Mixin.extend; Mixin.include</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        mixin() {
+          <span class="hljs-keyword">var</span> tests = <span class="hljs-number">0</span>,
+              failed = <span class="hljs-number">0</span>,
+              o = {},
+              F = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{},
+              instance = {},
+              m0 = {ext: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{ <span class="hljs-keyword">return</span> <span class="hljs-string">"extension"</span>;}},
+              proto = {p: <span class="hljs-string">"a"</span>,
+                   f: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{<span class="hljs-keyword">return</span> <span class="hljs-string">'foo'</span>;}},
+              m1 = <span class="hljs-built_in">Object</span>.create(proto);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>test case1</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mixin.extend:test case1"</span>);
+          Mixin.extend(o, m0);
+          tests++;
+          <span class="hljs-keyword">if</span>(o.ext()!==<span class="hljs-string">"extension"</span>){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.extend:expected o.ext()="extension" 
+              o.ext()=<span class="hljs-subst">${o.ext()}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>test case2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mixin.include:test case2"</span>);
+          Mixin.include(F, m0);
+          instance = <span class="hljs-keyword">new</span> F();
+          tests++;
+          <span class="hljs-keyword">if</span>(instance.ext()!==<span class="hljs-string">"extension"</span>){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.include:expected instance.ext()="extension" 
+              instance.ext()=<span class="hljs-subst">${instance.ext()}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>test case3</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mixin.extend_all:test case3"</span>);
+          o = {};
+          Mixin.extend_all(o, m1);
+          tests++;
+          <span class="hljs-keyword">if</span>(!Mixin.verify(o,<span class="hljs-string">'p'</span>)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.extend_all:expected o to have property p`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-keyword">if</span>(!Mixin.verify(o,<span class="hljs-string">'f'</span>)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.extend_all:expected o to have property f`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-keyword">if</span>(o.p !== <span class="hljs-string">'a'</span>){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.extend_all:expected o.p='a' o.p=<span class="hljs-subst">${o.p}</span>`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-keyword">if</span>(o.f() !== <span class="hljs-string">'foo'</span>){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.extend_all:expected o.f()='foo' o.f()=<span class="hljs-subst">${o.f()}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>test case4</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mixin.include_all:test case4"</span>);
+          Mixin.include_all(F, m1);
+          instance = <span class="hljs-keyword">new</span> F();
+          tests++;
+          <span class="hljs-keyword">if</span>(!Mixin.verify(instance,<span class="hljs-string">'p'</span>)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.include_all:expected instance to have property p`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-keyword">if</span>(!Mixin.verify(instance,<span class="hljs-string">'f'</span>)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.include_all:expected instance to have property f`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-keyword">if</span>(instance.p !== <span class="hljs-string">'a'</span>){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.include_all:expected instance.p='a' instancep=<span class="hljs-subst">${instance.p}</span>`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-keyword">if</span>(instance.f() !== <span class="hljs-string">'foo'</span>){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mixin.include_all:expected instance.f()='foo' instance.f()=<span class="hljs-subst">${instance.f()}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>report Mixin results </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">return</span> {te:tests, f:failed};
+        },<span class="hljs-comment">//mixin</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <ul>
+<li>Mediator.emit; Mediator.exec - cases</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        mediator() {
+          <span class="hljs-keyword">var</span> tests = <span class="hljs-number">0</span>,
+              failed = <span class="hljs-number">0</span>,
+              r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>test case1</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          <span class="hljs-keyword">if</span>(check.assert(!Mediator.emit(<span class="hljs-string">'foo'</span>, <span class="hljs-string">""</span>),<span class="hljs-string">`!Mediator.emit:expected send on non-existing channel 'foo' to return false`</span>)){
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>test case2</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: id = csphere"</span>); 
+          r = Mediator.exec({id:<span class="hljs-string">'csphere'</span> , f:<span class="hljs-string">"foo"</span>, a:<span class="hljs-number">7</span>});
+          <span class="hljs-keyword">if</span>(check.undefined(r) || check.emptyObject(r)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mediator.exec:expected full object - r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: id = :csphere"</span>); 
+          r = Mediator.exec({id:<span class="hljs-string">':csphere'</span> , f:<span class="hljs-string">"foo"</span>, a:<span class="hljs-number">7</span>});
+          <span class="hljs-keyword">if</span>(check.undefined(r) || check.emptyObject(r)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mediator.exec:expected full object - r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: id = i3d:csphere"</span>); 
+          r = Mediator.exec({id:<span class="hljs-string">'i3d:csphere'</span> , f:<span class="hljs-string">"foo"</span>, a:<span class="hljs-number">7</span>});
+          <span class="hljs-keyword">if</span>(check.undefined(r) || check.emptyObject(r)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mediator.exec:expected full object - r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }
+          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: id = i2d:axes"</span>); 
+          r = Mediator.exec({id:<span class="hljs-string">'i2d:axes'</span> , f:<span class="hljs-string">"foo"</span>, a:<span class="hljs-number">7</span>});
+          <span class="hljs-keyword">if</span>(check.undefined(r) || check.emptyObject(r)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mediator.exec:expected full object - r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>test case3</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: a = 'a' (single-value)"</span>); 
+          r = Mediator.exec({t:<span class="hljs-string">'camera3d'</span> , f:<span class="hljs-string">"home"</span>, a:<span class="hljs-string">'a'</span>});
+          <span class="hljs-keyword">if</span>(check.undefined(r)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mediator.exec:expected single object - r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }
+
+          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: a = ['a'] l=1"</span>); 
+          <span class="hljs-keyword">let</span> {a0} = Mediator.exec({t:<span class="hljs-string">'camera3d'</span> , f:<span class="hljs-string">"home"</span>, a:[<span class="hljs-string">'a'</span>]});
+          <span class="hljs-keyword">if</span>(check.undefined(a0)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mediator.exec:expected defined element - a0=<span class="hljs-subst">${a0}</span>`</span>);
+            failed++;
+          }
+
+          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: a = ['a', 'b'] l=2"</span>); 
+          <span class="hljs-keyword">let</span> {b0,b1} = Mediator.exec({t:<span class="hljs-string">'camera3d'</span> , f:<span class="hljs-string">"home"</span>, a:[<span class="hljs-string">'a'</span>,<span class="hljs-string">'b'</span>]});
+          <span class="hljs-keyword">if</span>(check.undefined(b0) || check.undefined(b1)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Mediator.exec:expected defined b0, b1`</span>);
+            failed++;
+          }
+
+          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: a = ['a', 'b', 'c'] l=3"</span>); 
+          <span class="hljs-keyword">let</span> {c0,c1,c2} = Mediator.exec({t:<span class="hljs-string">'camera3d'</span> , f:<span class="hljs-string">"home"</span>, a:[<span class="hljs-string">'a'</span>,<span class="hljs-string">'b'</span>,<span class="hljs-string">'c'</span>]});
+          <span class="hljs-keyword">if</span>(check.undefined(c0) || check.undefined(c1) || check.undefined(c2)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Mediator.exec:expected defined c0, c1, c2`</span>);
+            failed++;
+          }
+
+          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: a = ['a', 'b', 'c', 'd'] l=4"</span>); 
+          <span class="hljs-keyword">let</span> {d0,d1,d2,d3} = Mediator.exec({t:<span class="hljs-string">'camera3d'</span> , f:<span class="hljs-string">"home"</span>, a:[<span class="hljs-string">'a'</span>,<span class="hljs-string">'b'</span>,<span class="hljs-string">'c'</span>,<span class="hljs-string">'d'</span>]});
+          <span class="hljs-keyword">if</span>(check.undefined(d0) || check.undefined(d1) || check.undefined(d2) || check.undefined(d3)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Mediator.exec:expected defined d0, d1, d2, d3`</span>);
+            failed++;
+          }
+
+          tests++;
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"Mediator.exec: a = ['a', 'b', 'c', 'd', 'e'] l&gt;4"</span>); 
+          r = Mediator.exec({t:<span class="hljs-string">'camera3d'</span> , f:<span class="hljs-string">"home"</span>, a:[<span class="hljs-string">'a'</span>,<span class="hljs-string">'b'</span>,<span class="hljs-string">'c'</span>,<span class="hljs-string">'d'</span>,<span class="hljs-string">'e'</span>]});
+          <span class="hljs-keyword">if</span>(check.undefined(r) || !<span class="hljs-built_in">Array</span>.isArray(r)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`Mediator.exec:expected array length&gt;4 - r=<span class="hljs-subst">${r}</span>`</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>report Mediator results </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">return</span> {te:tests, f:failed};
+        },<span class="hljs-comment">//mediator</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <ul>
+<li>Transform3d.apply - cases</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        t3d() {
+          <span class="hljs-keyword">var</span> tests = <span class="hljs-number">0</span>,
+              failed = <span class="hljs-number">0</span>,
+              s = {s:[<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>]},
+              r = {e:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]},
+              t = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]},
+              m,
+              mm,
+              v;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>transform3d tests:</p>
+<ul>
+<li>NOTE: mm = (new THREE.Matrix4()).set(e0,e1,…,e15) takes arguments in
+row-major order, i.e set(m11,m12,m13,m14,m21,…m44) (using math indices).
+However, when a matrix is decomposed into elements, for example,
+[a0,a1,a2,…,a15] = mm.elements, the a-array is in column-major order,
+i.e [m11,m21,m31,m41,m12,…m44] (using math indices)</li>
+<li>NOTE: 3x3 rotation matrices are from wikipedia:
+<a href="https://en.wikipedia.org/wiki/Rotation_matrix">https://en.wikipedia.org/wiki/Rotation_matrix</a></li>
+</ul>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>tests 0 - identity</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          m = Transform3d.apply(s);   <span class="hljs-comment">// s-id</span>
+          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"s-id passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!s-d fails"</span>);
+            failed++;
+          }
+          tests++;
+          m = Transform3d.apply(r);   <span class="hljs-comment">// r-id</span>
+          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"r-id passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!r-id fails"</span>);
+            failed++;
+          }
+          tests++;
+          m = Transform3d.apply(t);   <span class="hljs-comment">// t-id</span>
+          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"t-id passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!t-id fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>tests 1 - scale</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          s = {s:[<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>]};            <span class="hljs-comment">// sx </span>
+          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          m = Transform3d.apply(s);
+          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"sx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!sx fails"</span>);
+            failed++;
+          }
+          tests++;
+          s = {s:[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]};            <span class="hljs-comment">// sy</span>
+          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          m = Transform3d.apply(s);
+          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"sy passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!sy fails"</span>);
+            failed++;
+          }
+          tests++;
+          s = {s:[<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>]};            <span class="hljs-comment">// sz</span>
+          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          m = Transform3d.apply(s);
+          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"sz passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!sz fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>tests 2 - euler rotations</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          r = {e:[<span class="hljs-number">0</span>, <span class="hljs-number">3.14159265</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// yaw1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>console.log(“yaw1 m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>console.log(“yaw1 mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw1 passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw1 fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {e:[<span class="hljs-number">0</span>, <span class="hljs-number">1.5708</span>, <span class="hljs-number">0</span>]};      <span class="hljs-comment">// yaw2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>console.log(“yaw2 m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, -<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>console.log(“yaw2 mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw2 passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw2 fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {e:[<span class="hljs-number">3.14159265</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// pitch1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>console.log(“pitch1 m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>console.log(“pitch1 mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch1 passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch1 fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {e:[<span class="hljs-number">1.5708</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]};     <span class="hljs-comment">// pitch2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>console.log(“pitch2 m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>console.log(“pitch2 mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch2 passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch2 fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {e:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">3.14159265</span>]}; <span class="hljs-comment">// roll1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>console.log(“roll1 m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>console.log(“roll1 mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll1 passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll1 fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {e:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1.5708</span>]};     <span class="hljs-comment">// roll2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>console.log(“roll2 m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>console.log(“roll2 mm.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll2 passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll2 fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>tests 3 - quaternion rotations</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          r = {q:[<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// yaw1-q PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>console.log(“yaw1-q m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>console.log(“yaw1-q mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw1-q passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw1-q fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {q:[<span class="hljs-number">0</span>, <span class="hljs-number">0.707107</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0.707107</span>]};      <span class="hljs-comment">// yaw2-q PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>console.log(“yaw2-q m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, -<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>console.log(“yaw2-q mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw2-q passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw2-q fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {q:[<span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// pitch1-q PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>console.log(“pitch1-q m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>console.log(“pitch1-q mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch1-q passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch1-q fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {q:[<span class="hljs-number">0.707107</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0.707107</span>]};     <span class="hljs-comment">// pitch2-q PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <p>console.log(“pitch2-q m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>console.log(“pitch2-q mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch2-q passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch2-q fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {q:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// roll1-q PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>console.log(“roll1-q m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>console.log(“roll1-q mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll1-q passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll1-q fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {q:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0.707107</span>, <span class="hljs-number">0.707107</span>]};     <span class="hljs-comment">// roll2-q PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>console.log(“roll2-q m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <p>console.log(“roll2-q mm.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll2-q passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll2-q fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <p>tests 4 - translation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          t = {t:[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>]};            <span class="hljs-comment">// tx</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>m</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          m = Transform3d.apply(t);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>console.log(“tx m.el = “ + v);
+mm</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>); <span class="hljs-comment">//row-m </span>
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <p>console.log(“tx mm.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"tx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!tx fails"</span>);
+            failed++;
+          }
+          tests++;
+          t = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>]};
+          m = Transform3d.apply(t);   <span class="hljs-comment">// ty</span>
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>console.log(“ty m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>); <span class="hljs-comment">//row-m </span>
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <p>console.log(“ty m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"ty passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!ty fails"</span>);
+            failed++;
+          }
+          tests++;
+          t = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>]};            <span class="hljs-comment">// tz</span>
+          m = Transform3d.apply(t);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <p>console.log(“tz m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>); <span class="hljs-comment">//row-m </span>
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>console.log(“tz m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"tz passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!tz fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-58">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-58">&#182;</a>
+              </div>
+              <p>tests 5 - scale and translation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          t = {t:[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], s:[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]};            <span class="hljs-comment">// tx, sy</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-59">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-59">&#182;</a>
+              </div>
+              <p>m</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          m = Transform3d.apply(t);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-60">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-60">&#182;</a>
+              </div>
+              <p>console.log(“tx m.el = “ + v);
+mm</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>); <span class="hljs-comment">//row-m </span>
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-61">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-61">&#182;</a>
+              </div>
+              <p>console.log(“tx mm.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"tx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!tx fails"</span>);
+            failed++;
+          }
+          tests++;
+          t = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>], s:[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]};            <span class="hljs-comment">// ty, sy</span>
+          m = Transform3d.apply(t);   <span class="hljs-comment">// ty</span>
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-62">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-62">&#182;</a>
+              </div>
+              <p>console.log(“ty-sy m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>); <span class="hljs-comment">//row-m </span>
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>console.log(“ty-sy m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"ty-sy passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!ty-sy fails"</span>);
+            failed++;
+          }
+          tests++;
+          t = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>], s:[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]};            <span class="hljs-comment">// tz, sy</span>
+          m = Transform3d.apply(t);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <p>console.log(“tz-sy m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>); <span class="hljs-comment">//row-m </span>
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>console.log(“tz-sy m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"tz-sy passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!tz-sy fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>test6 - rotation-e and translation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          r = {t:[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], e:[<span class="hljs-number">0</span>, <span class="hljs-number">3.14159265</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// tx yaw1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>console.log(“yaw1-tx m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>console.log(“yaw1-tx mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw1-tx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw1-tx fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>], e:[<span class="hljs-number">0</span>, <span class="hljs-number">1.5708</span>, <span class="hljs-number">0</span>]};      <span class="hljs-comment">// ty yaw2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-69">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <p>console.log(“yaw2-ty m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, -<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <p>console.log(“yaw2-ty mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw2-ty passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw2-ty fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>], e:[<span class="hljs-number">3.14159265</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// tz pitch1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <p>console.log(“pitch1-tz m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <p>console.log(“pitch1-tz mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch1-tz passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch1-tz fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], e:[<span class="hljs-number">1.5708</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]};     <span class="hljs-comment">// tx pitch2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-73">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-73">&#182;</a>
+              </div>
+              <p>console.log(“pitch2-tx m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-74">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-74">&#182;</a>
+              </div>
+              <p>console.log(“pitch2-tx mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch2-tx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch2-tx fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>], e:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">3.14159265</span>]}; <span class="hljs-comment">// ty roll1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-75">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-75">&#182;</a>
+              </div>
+              <p>console.log(“roll1-ty m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-76">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-76">&#182;</a>
+              </div>
+              <p>console.log(“roll1-ty mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll1-ty passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll1-ty fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>], e:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1.5708</span>]};     <span class="hljs-comment">// tz roll2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-77">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-77">&#182;</a>
+              </div>
+              <p>console.log(“roll2-tz m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-78">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-78">&#182;</a>
+              </div>
+              <p>console.log(“roll2-tz mm.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll2-tz passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll2-tz fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-79">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-79">&#182;</a>
+              </div>
+              <p>test7 - rotation-q and translation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          r = {t:[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], q:[<span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// tx yaw1-q PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-80">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-80">&#182;</a>
+              </div>
+              <p>console.log(“yaw1-q-tx m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-81">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-81">&#182;</a>
+              </div>
+              <p>console.log(“yaw1-q-tx mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw1-q-tx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw1-q-tx fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>], q:[<span class="hljs-number">0</span>, <span class="hljs-number">0.707107</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0.707107</span>]};      <span class="hljs-comment">// ty yaw2-q PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-82">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-82">&#182;</a>
+              </div>
+              <p>console.log(“yaw2-q-ty m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, -<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-83">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-83">&#182;</a>
+              </div>
+              <p>console.log(“yaw2-q-ty mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw2-q-ty passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw2-q-ty fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>], q:[<span class="hljs-number">1</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// tz pitch1-q PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-84">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-84">&#182;</a>
+              </div>
+              <p>console.log(“pitch1-q-tz m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-85">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-85">&#182;</a>
+              </div>
+              <p>console.log(“pitch1-q-tz mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch1-q-tz passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch1-q-tz fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], q:[<span class="hljs-number">0.707107</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0.707107</span>]};     <span class="hljs-comment">// tx pitch2-q PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-86">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-86">&#182;</a>
+              </div>
+              <p>console.log(“pitch2-q-tx m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-87">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-87">&#182;</a>
+              </div>
+              <p>console.log(“pitch2-q-tx mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch2-q-tx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch2-q-tx fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>], q:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1</span>, <span class="hljs-number">0</span>]};  <span class="hljs-comment">// ty roll1-q PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-88">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-88">&#182;</a>
+              </div>
+              <p>console.log(“roll1-q-ty m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-89">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-89">&#182;</a>
+              </div>
+              <p>console.log(“roll1-q-ty mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll1-q-ty passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll1-q-ty fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>], q:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0.707107</span>, <span class="hljs-number">0.707107</span>]};     <span class="hljs-comment">// tz roll2-q PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-90">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-90">&#182;</a>
+              </div>
+              <p>console.log(“roll2-q-tz m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-91">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-91">&#182;</a>
+              </div>
+              <p>console.log(“roll2-q-tz mm.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll2-q-tz passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll2-q-tz fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-92">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-92">&#182;</a>
+              </div>
+              <p>test8 - rotation-e and translation and scale</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          tests++;
+          r = {t:[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], e:[<span class="hljs-number">0</span>, <span class="hljs-number">3.14159265</span>, <span class="hljs-number">0</span>], s:[<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>]};  <span class="hljs-comment">// sz tx yaw1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-93">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-93">&#182;</a>
+              </div>
+              <p>console.log(“yaw1-tx-sz m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">2</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-94">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-94">&#182;</a>
+              </div>
+              <p>console.log(“yaw1-tx-sz mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw1-tx-sz passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw1-tx-sz fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>], e:[<span class="hljs-number">0</span>, <span class="hljs-number">1.5708</span>, <span class="hljs-number">0</span>], s:[<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>]};      <span class="hljs-comment">// sx ty yaw2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-95">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-95">&#182;</a>
+              </div>
+              <p>console.log(“yaw2-ty-sx m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, -<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-96">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-96">&#182;</a>
+              </div>
+              <p>console.log(“yaw2-ty-sx mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"yaw2-ty-sx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!yaw2-ty-sx fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>], e:[<span class="hljs-number">3.14159265</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>], s:[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]};  <span class="hljs-comment">// sy tz pitch1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-97">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-97">&#182;</a>
+              </div>
+              <p>console.log(“pitch1-tz-sy m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-98">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-98">&#182;</a>
+              </div>
+              <p>console.log(“pitch1-tz-sy mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch1-tz-sy passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch1-tz-sy fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>], e:[<span class="hljs-number">1.5708</span>, <span class="hljs-number">0</span>, <span class="hljs-number">0</span>], s:[<span class="hljs-number">1</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>]};     <span class="hljs-comment">// sz tx pitch2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-99">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-99">&#182;</a>
+              </div>
+              <p>console.log(“pitch2-tx-sz m.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,-<span class="hljs-number">2</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-100">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-100">&#182;</a>
+              </div>
+              <p>console.log(“pitch2-tx-sz mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"pitch2-tx-sz passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!pitch2-tx-sz fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">2</span>,<span class="hljs-number">0</span>], e:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">3.14159265</span>], s:[<span class="hljs-number">2</span>,<span class="hljs-number">1</span>,<span class="hljs-number">1</span>]}; <span class="hljs-comment">// sx ty roll1 PI</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-101">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-101">&#182;</a>
+              </div>
+              <p>console.log(“roll1-ty-sx m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(-<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,-<span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-102">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-102">&#182;</a>
+              </div>
+              <p>console.log(“roll1-ty-sx mm.v = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll1-ty-sx passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll1-ty-sx fails"</span>);
+            failed++;
+          }
+          tests++;
+          r = {t:[<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">2</span>], e:[<span class="hljs-number">0</span>, <span class="hljs-number">0</span>, <span class="hljs-number">1.5708</span>], s:[<span class="hljs-number">1</span>,<span class="hljs-number">2</span>,<span class="hljs-number">1</span>]};     <span class="hljs-comment">// sy tz roll2 PI/2</span>
+          m = Transform3d.apply(r);
+          v = m.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-103">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-103">&#182;</a>
+              </div>
+              <p>console.log(“roll2-tz-sy m.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          mm = (<span class="hljs-keyword">new</span> THREE.Matrix4()).set(<span class="hljs-number">0</span>,-<span class="hljs-number">2</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">1</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>,<span class="hljs-number">2</span>, <span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">0</span>,<span class="hljs-number">1</span>);
+          v = mm.elements;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-104">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-104">&#182;</a>
+              </div>
+              <p>console.log(“roll2-tz-sy mm.el = “ + v);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(Transform3d.verify(m, mm)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"roll2-tz-sy passes"</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!roll2-tz-sy fails"</span>);
+            failed++;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-105">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-105">&#182;</a>
+              </div>
+              <p>report Transform3d results </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">return</span> {te:tests, f:failed};
+        }<span class="hljs-comment">//t3d()</span>
+      };<span class="hljs-comment">//test</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-106">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-106">&#182;</a>
+              </div>
+              <p>Camera3d.lookAt - cases</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">if</span>(test_c3d){
+    <span class="hljs-keyword">if</span>(check.undefined(Camera3d)){
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'!unit_spec() Camera3d arg is not defined'</span>);
+    }<span class="hljs-keyword">else</span>{ <span class="hljs-comment">// test </span>
+      <span class="hljs-keyword">let</span> {te, f} = test.c3d();
+      tests += te;
+      failed += f;
+    }  
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-107">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-107">&#182;</a>
+              </div>
+              <p>Mixin.extend; Mixin.include; Mixin.extendAll; Mixin.includeAll;</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">if</span>(test_mixin){
+    <span class="hljs-keyword">if</span>(check.undefined(Mixin)){
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'!unit_spec() Mixin arg is not defined'</span>);
+    }<span class="hljs-keyword">else</span>{ <span class="hljs-comment">// test</span>
+      <span class="hljs-keyword">let</span> {te, f} = test.mixin();
+      tests += te;
+      failed += f;
+    }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-108">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-108">&#182;</a>
+              </div>
+              <p>Mediator.emit, Mediator.exec - cases</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+  <span class="hljs-keyword">if</span>(test_mediator){
+    <span class="hljs-keyword">if</span>(check.undefined(Mediator)){
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'!unit_spec() Mediator arg is not defined'</span>);
+    }<span class="hljs-keyword">else</span>{ <span class="hljs-comment">//test</span>
+      <span class="hljs-keyword">let</span> {te, f} = test.mediator();
+      tests += te;
+      failed += f;
+    }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-109">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-109">&#182;</a>
+              </div>
+              <p>Transform3d.apply - cases</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">if</span>(test_t3d){
+    <span class="hljs-keyword">if</span>(check.undefined(Transform3d)){
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">'!unit_spec() Transform3d arg is not defined'</span>);
+    }<span class="hljs-keyword">else</span>{ <span class="hljs-comment">// test</span>
+      <span class="hljs-keyword">let</span> {te, f} = test.t3d();
+      tests += te;
+      failed += f;
+    }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-110">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-110">&#182;</a>
+              </div>
+              <p>report unit_test results</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`*** unit test summary: 
+                       <span class="hljs-subst">${tests}</span> tests  
+                       <span class="hljs-subst">${failed}</span> failures ***`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-111">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-111">&#182;</a>
+              </div>
+              <p>turn off config.unit_test</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  config.unit_test = <span class="hljs-literal">false</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-112">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-112">&#182;</a>
+              </div>
+              <p>return promise</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> <span class="hljs-built_in">Promise</span>((resolve, reject) =&gt; {
+    <span class="hljs-keyword">if</span>(failed === <span class="hljs-number">0</span>){
+      resolve();
+    }<span class="hljs-keyword">else</span>{
+      reject(<span class="hljs-keyword">new</span> <span class="hljs-built_in">Error</span>(<span class="hljs-string">`<span class="hljs-subst">${failed}</span> failures`</span>));
+    }
+  });
+};</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

@@ -1,0 +1,6 @@
+[20:00:47.876] {"t":"camera2d","f":"zoomflyTo","a":{"s":2,"d":3}},
+[20:01:09.993] {"t":"camera2d","f":"zoomflyTo","a":{"s":0.5,"d":3}},
+[20:01:13.053] {"t":"camera2d","f":"zoomflyTo","a":{"s":2,"d":3}},
+[20:01:30.006] {"t":"camera2d","f":"zoomflyTo","a":{"s":0.5,"d":3}},
+[20:01:49.991] {"t":"camera2d","f":"zoomflyTo","a":{"s":2,"d":3}},
+[20:01:53.002] {"t":"camera2d","f":"zoomflyTo","a":{"s":0.5,"d":3}},

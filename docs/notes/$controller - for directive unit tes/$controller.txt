@@ -1,0 +1,34 @@
+$controller
+- has $controllerProvider
+- it is service in module ng
+$controller service is responsible for instantiating controllers.
+
+It's just a simple call to $injector, but extracted into a service, 
+so that one can override this service with BC (outdated controller) version.
+
+Dependencies: $injector
+
+
+Usage: $controller(constructor, locals);
+
+@param: constructor	
+type: function() OR string	
+details: If called with a function then it's considered to be the controller 
+constructor function. Otherwise it's considered to be a string which is used 
+to retrieve the controller constructor using the following steps:
+check if a controller with given name is registered via $controllerProvider
+check if evaluating the string on the current scope returns a constructor
+if $controllerProvider#allowGlobals, check window[constructor] on the 
+global window object (not recommended)
+The string can use the controller as property syntax, where the controller 
+instance is published as the specified property on the scope; the scope must 
+be injected into locals param for this to work correctly.
+
+@param: locals	
+type: Object	
+details: Injection locals for Controller.
+
+
+@eturn
+type: Object	
+details: Instance of given controller.

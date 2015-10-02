@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>mw-narrative-directive.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="..\docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>mw-narrative-directive.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>mw-narrative-directive</li>
+<li>dynamic meta-controller for state management by url and url-components
+which are descriptors used to compile independent template:model views
+for each of six url components:</li>
+<li>url = <code>scene/i3d/i2d/base/ui/shot</code><br>
+where scene is a hierarchical name and carries media meta-information, 
+i3d is webgl, i2d is svg, base and ui are html, and shot is scene dynamics 
+such as cinematography animation and scene additions and modifications<br> 
+Each component is a template:model pair (although a model is not strictly
+required)</li>
+<li><p>narrative also manages the browser history and the UI controls
+all in a synchronized and dynamic manner</p>
+</li>
+<li><p>@dependencies: $state, $location, param services and config<br>
+@param {angular.$rootScope} $rootScope<br>
+@param {ui.router.state.$state} $state<br>
+@param {angular.$location} $location<br>
+@param {angular.$templateCache} $templateCache<br>
+@param {angular.$timeout} $timeout<br>
+@param {angular.$compile} $compile<br>
+@param {services/mediator-service} Mediator<br>
+@param {services/models-service} Models<br>
+@param {services/camera3d-service} Camera3d<br>
+@param {services/camera2d-service} Camera2d<br>
+@param {services/log-service} Log<br>
+@param {GSAP} TweenMax<br>
+@param {GSAP} TimelineMax<br>
+@param {GSAP} Quad<br>
+@param {created in index.html initialization script} config<br>
+@ngInject</p>
+</li>
+<li><p>NOTE: ngInject is used by ngAnnotate to generate a 
+minification-safe injection annotation such as:
+<code>function($scope) =&gt; [&#39;$scope&#39;, function($scope){}]</code></p>
+</li>
+<li><p>narrative provides a subset of functional entry points to a ‘pipeline’ of
+url generation and modifications. Action messages can execute these
+functions to modify application state by change to one or more of the url
+components.<br>
+These pipeline entry points are:</p>
+<ul>
+<li>shot(shot-template-name:JSON-model) or shot(shot-template-name:model-name)</li>
+<li>change_scene(scene-name)</li>
+<li>change_state(absolute-url) or change_state(delta-url)</li>
+<li>NOTE: $location.url(url) is the final change of url and state and
+changes the address in the browser address bar (which is also the
+current state of history). It is used internally ONLY</li>
+</ul>
+</li>
+<li>NOTE: narrative detects two bound events:<ul>
+<li>$locationChangeSuccess - updates a stateObj and state sequence </li>
+<li>$stateChangeSuccess - executes associated timeline animations and
+dynamics</li>
+</ul>
+</li>
+<li>NOTE: narrative initializes Camera2d and Camera3d and passes to them (and others) 
+references to narrative, narrative scope for access to models, 
+and Mediator for access to components and websocket communications</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+angular.module(<span class="hljs-string">'app'</span>).directive(<span class="hljs-string">'mwNarrative'</span>, 
+  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($rootScope, $state, $location, $templateCache, $timeout, $compile, 
+    Mediator, Models, Camera3d, Camera2d, Log, TweenMax, TimelineMax, Quad, 
+    config)</span> </span>{
+<span class="hljs-pi">  'use strict'</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>auxilliary utility function - calculate delta_params, the url components
+which have changed from one absolute url to another</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> delta = (abs_params, abs_paramsp) =&gt; {
+    <span class="hljs-keyword">var</span> delta_params = {};
+
+    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-built_in">Object</span>.keys(abs_params)){
+      <span class="hljs-keyword">if</span>(abs_paramsp[p] !== abs_params[p]){
+        delta_params[p] = abs_params[p];
+      }<span class="hljs-keyword">else</span>{
+        delta_params[p] = <span class="hljs-string">""</span>;
+      }
+    }
+    <span class="hljs-keyword">return</span> delta_params;
+  };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>closure vars for e2e tests</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> urls_index = <span class="hljs-number">0</span>,
+      urls_failed = <span class="hljs-number">0</span>,
+      shot_index = <span class="hljs-number">0</span>,
+      shot_failed = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>class declarations are not hoisted so place them at the top in case of
+possible extends expression, for exp. (not used in this system)<br>
+Placement inside the angular registration function prevents global name clash<br>
+The ES6 class is provided as a partial bridge to a possible future
+implementation in Angular 2.x or in some other components framework<br></p>
+<ul>
+<li>NOTE: prototypes are the underlying more simple and elegant delegation
+method but classes work fairly well - in some cases services or other
+prototype instances must be declared as closure variables rather than
+instance variables of a component class instance. This is in order to
+force the use of the  proper execution context (‘this’) for correct
+operation of the service or object instance. This mismatch of execution
+context intention is the cause of errors which do not occur in either
+pure class systems or pure prototype systems - see notes at specific closure
+variable declarations. It is good to remember that ‘class’ is a useful
+syntax but not a true Class.</li>
+<li>NOTE: the class ‘Narrative’ provides the constructor for the component used
+for injection </li>
+<li>NOTE: constructors are run from root-to-leaf and then link-fs are run leaf-to-root</li>
+<li>NOTE: bindToController double-bound (“=”) attributes are
+initially set to the child scope controller ctor value since the
+child scope controller is run after the parent scope controller.
+However, if the double-bound attributes are (also) set in the link-fs,
+the parent link-f is run last so becomes the set attribute value</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Narrative</span> </span>{
+    constructor(){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>ui </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.scenes = <span class="hljs-built_in">Object</span>.keys(config.scenes);     
+      <span class="hljs-keyword">this</span>.controls = <span class="hljs-built_in">Object</span>.keys(config.controls);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>ui - stored in stateObj</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.scene =  config.opening_scene;          
+      <span class="hljs-keyword">this</span>.control_state = config.controls;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>this.terms = Object.keys(this.scene)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">const</span> terms = [<span class="hljs-string">'scene'</span>, <span class="hljs-string">'i3d'</span>, <span class="hljs-string">'i2d'</span>, <span class="hljs-string">'base'</span>, <span class="hljs-string">'ui'</span>, <span class="hljs-string">'shot'</span>]; 
+      <span class="hljs-keyword">this</span>.terms = terms;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>flag to regulate processing in the $locationChangeSuccess handler<br>
+true =&gt; process back/fwd;<br> 
+false =&gt; jump over back/fwd processing<br>
+<code>this.backfwd</code> set to false in change_state() because that method is not
+attained by back-fwd; <code>this.backfwd</code> is set to true at end of url-change
+in the $stateChangeSuccess handler for the next url<br>
+frame is an ordered index for stateObjs - it is used to determine if a
+back-fwd url change is back or forward - by order comparison to the
+previous frame index</p>
+<ul>
+<li>NOTE: fwd implies that the shot animation timeline is played forward
+in time, and back implies that it is reversed in time</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.backfwd = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">this</span>.frame = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>prev_url saves the present url for various comparisons to (present) url<br> 
+sequence is a hash with url keys and frame index values ordered 
+by time of creation - used to detect back or forward button press</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.sequence = {};
+      <span class="hljs-keyword">this</span>.prev_url = <span class="hljs-string">'^'</span>;             <span class="hljs-comment">// delta</span>
+      <span class="hljs-keyword">this</span>.back = <span class="hljs-literal">false</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>history stateObj - persistent</p>
+<ul>
+<li>NOTE: abs_params and delta_params each use the constant keys found in
+<code>this.terms</code> array: ‘scene’, ‘i3d’, ‘i2d’, ‘base’, ‘ui’ and ‘shot’</li>
+<li>NOTE: abs_params  is the set of six component values found in the tail of the
+address bar url following the ‘app/‘<br>
+Similarly delta_params are the components of the relative url ‘tail’
+which have changed from the previous state’s url with “” representing
+the unchanged components.</li>
+<li>By tail is meant <code>&lt;adress bar url&gt;.replace(/.*app\//, &quot;&quot;);</code></li>
+<li>NOTE: config.initial_url is an example of a relative url ‘tail’</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.stateObjp = {};
+      <span class="hljs-keyword">this</span>.stateObjp[<span class="hljs-string">'abs_url'</span>] = <span class="hljs-string">'^'</span>;
+      <span class="hljs-keyword">this</span>.stateObjp[<span class="hljs-string">'delta_url'</span>] = <span class="hljs-string">'^'</span>;
+      <span class="hljs-keyword">this</span>.stateObj = {};
+      <span class="hljs-keyword">this</span>.stateObj[<span class="hljs-string">'scene'</span>] = <span class="hljs-keyword">this</span>.scene;
+      <span class="hljs-keyword">this</span>.stateObj[<span class="hljs-string">'control_state'</span>] = <span class="hljs-keyword">this</span>.control_state;
+      <span class="hljs-keyword">this</span>.stateObj[<span class="hljs-string">'delta_url'</span>] = config.initial_url;
+      <span class="hljs-keyword">this</span>.stateObj[<span class="hljs-string">'abs_url'</span>] = config.initial_url;
+      <span class="hljs-keyword">this</span>.stateObj[<span class="hljs-string">'delta_params'</span>] = config.scenes[<span class="hljs-keyword">this</span>.scene];
+      <span class="hljs-keyword">this</span>.stateObj[<span class="hljs-string">'abs_params'</span>] = config.scenes[<span class="hljs-keyword">this</span>.scene];
+      <span class="hljs-keyword">this</span>.sequence[config.initial_url] = <span class="hljs-keyword">this</span>.frame;
+      <span class="hljs-keyword">this</span>.sequence[<span class="hljs-keyword">this</span>.prev_url] = <span class="hljs-keyword">this</span>.frame - <span class="hljs-number">1</span>;
+      <span class="hljs-keyword">this</span>.sequence[<span class="hljs-keyword">this</span>.frame] = <span class="hljs-keyword">this</span>.stateObj;
+      <span class="hljs-keyword">this</span>.sequence[<span class="hljs-keyword">this</span>.frame - <span class="hljs-number">1</span>] = <span class="hljs-keyword">this</span>.stateObjp;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>metastate - stateConfig of single ‘delta’ state</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.metastate = $state.get(<span class="hljs-string">'delta'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>initial metastate.stateObj/stateObjp</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.metastate.stateObj = <span class="hljs-keyword">this</span>.stateObj;
+      <span class="hljs-keyword">this</span>.metastate.stateObjp = <span class="hljs-keyword">this</span>.stateObjp;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>initial store of stateObj uses <code>config.initial_url</code> as initial url</p>
+<ul>
+<li>NOTE: this.stateObj[‘abs_url’] = config.initial_url which is a full
+url-components expansion so provides an information ‘bootstrap’ about
+what is playing in the first state-scene<br>.<br>This permits component ‘set changes’ and dynamic camera shots to be 
+applied to the opening scene</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      history.replaceState(<span class="hljs-keyword">this</span>.stateObj, <span class="hljs-keyword">this</span>.scene);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>TEMP! - test bindToController for ui-msgbg</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.stateObj.abs_params[<span class="hljs-string">'ui'</span>].match(<span class="hljs-regexp">/ui-msgbg/</span>)){
+        <span class="hljs-keyword">this</span>.test();
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>NOTE: e.state is this.stateObj for some state</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-built_in">window</span>.addEventListener(<span class="hljs-string">'popstate'</span>, (e) =&gt; {
+      });
+
+
+
+      $rootScope.$on(<span class="hljs-string">'$locationChangeSuccess'</span>, (e) =&gt; {
+        <span class="hljs-keyword">var</span> url = $location.url(),
+            popped_url,
+            abs_paramsp,
+            abs_params,
+            delta_params = {},
+            delta_url = <span class="hljs-string">''</span>,
+            d_url = <span class="hljs-string">''</span>,
+            abs_url = <span class="hljs-string">''</span>,
+            a_url = <span class="hljs-string">''</span>,
+            d_passed = <span class="hljs-literal">true</span>,
+            a_passed = <span class="hljs-literal">true</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>ignore first locationChangeSucess which is start-up with url = ‘/‘
+log all url-state changes - except initial.
+(possibly) e2e-test all url changes - except initial.
+absolute = stateObj[‘abs_url’] and delta = $location(url)
+{2,3} log abs_url, delta_url - for building e2e_spec array</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span>(!<span class="hljs-regexp">/^\/$/</span>.test(url)){
+          Log.log(<span class="hljs-string">`<span class="hljs-subst">${this.stateObj['abs_url']}</span>`</span>);
+          Log.log(<span class="hljs-string">`<span class="hljs-subst">${url}</span>`</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p><em>*</em> e2e urls test</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(config.e2e_test){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>delta_url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            d_url = config.e2e_spec[urls_index].delta_url;
+            delta_url = url; <span class="hljs-comment">// $location.url()</span>
+            <span class="hljs-keyword">if</span>(!check.primitive(delta_url)){
+              delta_url = delta_url.valueOf();  <span class="hljs-comment">// make primitive if not already</span>
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>abs_url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            a_url = config.e2e_spec[urls_index].abs_url;
+            abs_url = <span class="hljs-keyword">this</span>.stateObj.abs_url;
+            <span class="hljs-keyword">if</span>(!check.primitive(abs_url)){
+              abs_url = abs_url.valueOf();  <span class="hljs-comment">// make primitive if not already</span>
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>primitive strings are equal (===) by value, not ref
+delta_url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span>(delta_url !== d_url){
+              d_passed = <span class="hljs-literal">false</span>;
+              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`e2e_spec[<span class="hljs-subst">${urls_index}</span>] delta_url test failed: result:<span class="hljs-subst">${delta_url}</span> !== expected:<span class="hljs-subst">${d_url}</span>`</span>);
+              Log.log(<span class="hljs-string">`e2e_spec[<span class="hljs-subst">${urls_index}</span>] delta_url test failed: result:<span class="hljs-subst">${delta_url}</span> !== expected:<span class="hljs-subst">${d_url}</span>`</span>);
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>abs_url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span>(abs_url !== a_url){
+              a_passed = <span class="hljs-literal">false</span>;
+              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`e2e_spec[<span class="hljs-subst">${urls_index}</span>] abs_url test failed: result:<span class="hljs-subst">${abs_url}</span> !== expected<span class="hljs-subst">${a_url}</span>`</span>);
+              Log.log(<span class="hljs-string">`e2e_spec[<span class="hljs-subst">${urls_index}</span>] abs_url test failed: result:<span class="hljs-subst">${abs_url}</span> !== expected:<span class="hljs-subst">${a_url}</span>`</span>);
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>score</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span>(!d_passed || !a_passed){
+              urls_failed++;
+            }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>prepare for next state-change e2e urls test</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            urls_index++;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>report e2e result</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span>(urls_index === config.e2e_spec.length){
+              <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`*** e2e action-&gt;state-change-urls comparison test: 
+                                   <span class="hljs-subst">${config.e2e_spec.length}</span> tests  
+                                   <span class="hljs-subst">${urls_failed}</span> failures ***`</span>); 
+              Log.log(<span class="hljs-string">`*** e2e urls test: <span class="hljs-subst">${config.e2e_spec.length}</span> tests  <span class="hljs-subst">${urls_failed}</span> failures ***`</span>); 
+            }
+          }
+        }<span class="hljs-comment">//avoid initial url change ('/')</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>if $locationChangeSuccess generated by back or fwd button</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.backfwd){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>this.stateObjp</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">this</span>.stateObjp = <span class="hljs-keyword">this</span>.sequence[<span class="hljs-keyword">this</span>.frame];
+
+          <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.sequence[url] &lt; <span class="hljs-keyword">this</span>.sequence[<span class="hljs-keyword">this</span>.prev_url]){
+            <span class="hljs-keyword">this</span>.back = <span class="hljs-literal">true</span>;
+            <span class="hljs-keyword">this</span>.frame -= <span class="hljs-number">1</span>;
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-keyword">this</span>.back = <span class="hljs-literal">false</span>;
+            <span class="hljs-keyword">this</span>.frame += <span class="hljs-number">1</span>;
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>this.stateObj</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">this</span>.stateObj = <span class="hljs-keyword">this</span>.sequence[<span class="hljs-keyword">this</span>.frame];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>set metastate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">this</span>.metastate.stateObj = <span class="hljs-keyword">this</span>.stateObj;
+          <span class="hljs-keyword">this</span>.metastate.stateObjp = <span class="hljs-keyword">this</span>.stateObjp;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>recalculate this.metastate.delta_params and 
+this.metastate.delta_url to correspond to change from the 
+‘next’ state instead of change from the ‘previous’ state
+as originally calculated</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          abs_paramsp = <span class="hljs-keyword">this</span>.metastate.stateObjp.abs_params;
+          abs_params = <span class="hljs-keyword">this</span>.metastate.stateObj.abs_params;
+          delta_params = delta(abs_params, abs_paramsp);
+          <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> terms){
+            delta_url += <span class="hljs-string">`/<span class="hljs-subst">${delta_params[p]}</span>`</span>;
+          }
+          <span class="hljs-keyword">this</span>.metastate.stateObj.delta_params = delta_params;   
+          <span class="hljs-keyword">this</span>.metastate.stateObj.delta_url = delta_url;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>sync this.stateObj </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">this</span>.stateObj = <span class="hljs-keyword">this</span>.metastate.stateObj;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>set scene for ui</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          $timeout(() =&gt; {
+            $rootScope.$apply(() =&gt; {
+              <span class="hljs-keyword">this</span>.scene = <span class="hljs-keyword">this</span>.stateObj.scene;
+              <span class="hljs-keyword">this</span>.scope().ui.scene = <span class="hljs-keyword">this</span>.scene;
+            });
+          });
+        }<span class="hljs-keyword">else</span>{
+          <span class="hljs-keyword">this</span>.back = <span class="hljs-literal">false</span>;
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>if not initial url ‘/‘ - identify malformed url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span>(!<span class="hljs-regexp">/^\/$/</span>.test(url)){
+          <span class="hljs-keyword">if</span>(<span class="hljs-regexp">/^(\/.*){6}$/</span>.test(url)){
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Narrative.onLocChSucc(url = <span class="hljs-subst">${url}</span> is NOT well-formed`</span>);
+            Log.log({t:<span class="hljs-string">'!Narrative'</span>, f:<span class="hljs-string">'onLocChSucc'</span>, a:<span class="hljs-string">`url <span class="hljs-subst">${url}</span> is NOT well-formed`</span>});
+          }
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>TEMP! - test bindToController for ui-msgbg</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.stateObj.abs_params[<span class="hljs-string">'ui'</span>].match(<span class="hljs-regexp">/ui-msgbg/</span>)){
+          <span class="hljs-keyword">this</span>.test();
+        }
+      });
+
+
+
+      $rootScope.$on(<span class="hljs-string">'$stateChangeSuccess'</span>, (e) =&gt; {
+        <span class="hljs-keyword">var</span> shot,
+            _shot,
+            expected_shot,
+            _scope,
+            delta,
+            branches,
+            node,
+            tl,
+            timeline = (_delta) =&gt; {
+              <span class="hljs-keyword">var</span> _timeline = _delta.timeline || {},
+                  tlp = _timeline.p || {},
+                  actors = _timeline.actors || {},
+                  actions = _timeline.actions || [],
+                  ntuple,
+                  type,
+                  id,
+                  p,
+                  target,  <span class="hljs-comment">// target obj for property to be tweened - animated</span>
+                  tweens,
+                  i;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>timeline ctor params - tlp</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>              tlp.paused = tlp.paused || <span class="hljs-literal">true</span>; <span class="hljs-comment">// default</span>
+              tlp.tweens = tlp.tweens || [];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>iterate through actors on which one or more tweens are defined</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>              <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> a <span class="hljs-keyword">of</span> <span class="hljs-built_in">Object</span>.keys(actors)){
+                ntuple = a.split(<span class="hljs-string">':'</span>);
+                type = ntuple[<span class="hljs-number">0</span>];
+                id = ntuple[<span class="hljs-number">1</span>];
+                <span class="hljs-keyword">if</span>(!type){
+                  <span class="hljs-keyword">continue</span>;
+                }
+                <span class="hljs-keyword">if</span>(!id){
+                  <span class="hljs-keyword">continue</span>;
+                }
+                ntuple = ntuple.slice(<span class="hljs-number">2</span>); 
+                i=<span class="hljs-number">0</span>;
+                <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> q <span class="hljs-keyword">of</span> ntuple){
+                  i++;
+                }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>set target of tween</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                <span class="hljs-keyword">if</span>(type === <span class="hljs-string">'i3d'</span>){
+                  target = Camera3d.actor(id);
+                }<span class="hljs-keyword">else</span>{
+                  target = <span class="hljs-built_in">document</span>.getElementById(id);
+                }
+                <span class="hljs-keyword">if</span>(!target){
+                  <span class="hljs-keyword">continue</span>;
+                }
+                <span class="hljs-keyword">if</span>(ntuple.length &gt; <span class="hljs-number">0</span>){
+                  <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> q <span class="hljs-keyword">of</span> ntuple){
+                    <span class="hljs-keyword">if</span>(q){
+                      target = target[q];
+                    }
+                  }
+                }
+                <span class="hljs-keyword">if</span>(!target){
+                  <span class="hljs-keyword">continue</span>;
+                }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>insert tween defaults if not specified<br>
+add tweens to tlp.tweens array</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                tweens = actors[a];
+                <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> tween <span class="hljs-keyword">of</span> tweens){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>dur - duration of the tween animation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                  <span class="hljs-keyword">if</span>(tween.dur === <span class="hljs-literal">undefined</span>){
+                    tween.dur = <span class="hljs-number">10</span>;
+                  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>p - properties of the target object which are to be tweened</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                  tween.p.delay = tween.p.delay || <span class="hljs-number">0</span>;
+                  tween.p.ease = tween.p.ease || Quad.easeInOut;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>actions</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                  <span class="hljs-keyword">if</span>(tween.actions){
+                    <span class="hljs-keyword">if</span>(tween.actions.start){
+                      tween.p.onStart = Mediator.exec;
+                      tween.p.onStartParams = tween.actions.start;
+                    }
+                    <span class="hljs-keyword">if</span>(tween.actions.update){
+                      tween.p.onUpdate = Mediator.exec;
+                      tween.p.onUpdateParams = tween.actions.update;
+                    }
+                    <span class="hljs-keyword">if</span>(tween.actions.complete){
+                      tween.p.onComplete = Mediator.exec;
+                      tween.p.onCompleteParams = tween.actions.complete;
+                    }
+                    <span class="hljs-keyword">if</span>(tween.actions.start){
+                      tween.p.onReverseComplete = Mediator.exec;
+                      tween.p.onReverseCompleteParams = tween.actions.reverse_complete;
+                    }
+                  }
+                  tlp.tweens.push(TweenMax.to(target, tween.dur, tween.p));
+                }
+              }<span class="hljs-comment">//actors</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>add callback function(s) to tlp </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>              <span class="hljs-keyword">if</span>(actions){
+                <span class="hljs-keyword">if</span>(actions.start){
+                  tlp.onStart = Mediator.exec;
+                  tlp.onStartParams = actions.start;
+                }
+                <span class="hljs-keyword">if</span>(actions.update){
+                  tlp.onUpdate = Mediator.exec;
+                  tlp.onUpdateParams = actions.update;
+                }
+                <span class="hljs-keyword">if</span>(actions.complete){
+                  tlp.onComplete = Mediator.exec;
+                  tlp.onCompleteParams = actions.complete;
+                }
+                <span class="hljs-keyword">if</span>(actions.reverseComplete){
+                  tlp.onReverseComplete = Mediator.exec;
+                  tlp.onReverseCompleteParams = actions.reverseComplete;
+                }
+              }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>add Mediator.next() to onComplete
+force Mediator.next - overwrite if needed</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>              tlp.onComplete = Mediator.exec;
+              tlp.onReverseComplete = Mediator.exec;
+              tlp.onCompleteParams = actions.complete || [];
+              tlp.onCompleteParams.push({t: <span class="hljs-string">'mediator'</span>, f:<span class="hljs-string">'queue_ready_next'</span>});
+              tlp.onReverseCompleteParams = actions.reverseComplete || [];
+              tlp.onReverseCompleteParams.push({t: <span class="hljs-string">'mediator'</span>, f:<span class="hljs-string">'queue_ready_next'</span>});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>return primed timeline</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>              <span class="hljs-keyword">return</span> <span class="hljs-keyword">new</span> TimelineMax(tlp);
+            };<span class="hljs-comment">//timeline() </span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <p>update urls</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">this</span>.prev_url = $location.url();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>set to trigger back-fwd processing - turned off in change_state
+if no back/fwd button press</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">this</span>.backfwd = <span class="hljs-literal">true</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p><em>*</em> e2e shot-test
+convert shot objects to JSON-strings and ensure they are primitives</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span>(config.e2e_test){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>prepare</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          shot = <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.scope().shot || {});
+          <span class="hljs-keyword">if</span>(!check.primitive(shot)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!JSON.stringify(shot) not primitive - index <span class="hljs-subst">${shot_index}</span>`</span>);
+            Log.log(<span class="hljs-string">`!JSON.stringify(shot) not primitive - index <span class="hljs-subst">${shot_index}</span>`</span>);
+            shot = shot.valueOf();
+          }
+          expected_shot = <span class="hljs-built_in">JSON</span>.stringify(config.e2e_spec[shot_index].shot);
+          <span class="hljs-keyword">if</span>(!check.primitive(expected_shot)){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!JSON.stringify(expected_shot) not primitive - index <span class="hljs-subst">${shot_index}</span>`</span>);
+            Log.log(<span class="hljs-string">`!JSON.stringify(expected_shot) not primitive - index <span class="hljs-subst">${shot_index}</span>`</span>);
+            expected_shot = expected_shot.valueOf();
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>test</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(shot !== expected_shot){
+            shot_failed++;
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`e2e_spec[<span class="hljs-subst">${shot_index}</span>] shot test failed: result:<span class="hljs-subst">${shot}</span> !== expected:<span class="hljs-subst">${expected_shot}</span>`</span>);
+            Log.log(<span class="hljs-string">`e2e_spec[<span class="hljs-subst">${shot_index}</span>] shot test failed: result:<span class="hljs-subst">${shot}</span> !== expected:<span class="hljs-subst">${expected_shot}</span>`</span>);
+          }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <p>prepare for next e2e shot test</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          shot_index++;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <p>report e2e result</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">if</span>(shot_index === config.e2e_spec.length){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`*** e2e shot-&gt;scope.shot models comparison test: 
+                             <span class="hljs-subst">${config.e2e_spec.length}</span> tests  
+                             <span class="hljs-subst">${shot_failed}</span> failures ***`</span>); 
+            Log.log(<span class="hljs-string">`*** e2e shot test: <span class="hljs-subst">${config.e2e_spec.length}</span> tests <span class="hljs-subst">${shot_failed}</span> failures ***`</span>); 
+          }
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>possible grafts and animations in shot model
+if no chnage in shot this.scope().shot is undefined
+prev: delta = this.scope().shot.delta || {};</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        _scope = <span class="hljs-keyword">this</span>.scope() || {};
+        _shot = _scope.shot || {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>{4} log abs_url, delta_url - for building e2e_spec array</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        Log.log(_shot);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <p>timeline - acts on base, i3d and/or i2d actors</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        delta = _shot.delta || {};
+        tl = timeline(delta);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>timeline - if back - run anim in reverse, else forward</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.back === <span class="hljs-literal">true</span>){
+          tl.seek(tl.duration());
+          tl.reverse();
+        }<span class="hljs-keyword">else</span>{
+          tl.play();
+        }
+      });
+    }<span class="hljs-comment">//ctor</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <p>narrative instance methods:<br>
+diagnostic feedback monitoring of $templateCache</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    onload(msg){
+      <span class="hljs-keyword">if</span>(msg.match(<span class="hljs-regexp">/templates.html/</span>)){
+      }
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <p>manage control changes and UI in a synchronized manner</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    change_control(control){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>‘csph’ is camaerasphere<br>
+lights (attached to camerasphere) consist of 
+defaults - ‘key’, ‘fill’ and ‘back’</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">switch</span>(control){
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'HOME'</span>:
+          Camera3d.home({d:<span class="hljs-number">3</span>});
+          $timeout(() =&gt; {
+            $timeout(() =&gt; {
+              $rootScope.$apply(() =&gt; {
+                <span class="hljs-keyword">this</span>.control_state[<span class="hljs-string">'HOME'</span>] = <span class="hljs-literal">false</span>;
+              });
+            }, <span class="hljs-number">3000</span>);
+          });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-58">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-58">&#182;</a>
+              </div>
+              <p>log action</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          Log.log({<span class="hljs-string">"t"</span>:<span class="hljs-string">"camera3d"</span>, <span class="hljs-string">"f"</span>:<span class="hljs-string">"home"</span>, <span class="hljs-string">"a"</span>:{<span class="hljs-string">"d"</span>:<span class="hljs-number">3</span>}});
+          <span class="hljs-keyword">break</span>;
+
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'CNTR'</span>:
+          Camera3d.center({d:<span class="hljs-number">3</span>});
+          $timeout(() =&gt; {
+            $timeout(() =&gt; {
+              $rootScope.$apply(() =&gt; {
+                <span class="hljs-keyword">this</span>.control_state[<span class="hljs-string">'CNTR'</span>] = <span class="hljs-literal">false</span>;
+              });
+            }, <span class="hljs-number">3000</span>);
+          });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-59">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-59">&#182;</a>
+              </div>
+              <p>log action</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          Log.log({<span class="hljs-string">"t"</span>:<span class="hljs-string">"camera3d"</span>, <span class="hljs-string">"f"</span>:<span class="hljs-string">"center"</span>, <span class="hljs-string">"a"</span>:{<span class="hljs-string">"d"</span>:<span class="hljs-number">3</span>}});
+          <span class="hljs-keyword">break</span>;
+
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'csph'</span>:
+          <span class="hljs-keyword">if</span>(Camera3d.csphere()){
+            <span class="hljs-keyword">let</span> b = <span class="hljs-keyword">this</span>.control_state[<span class="hljs-string">'csph'</span>];
+            Camera3d.toggle_csphere({name:<span class="hljs-string">'csph'</span>, val:b});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-60">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-60">&#182;</a>
+              </div>
+              <p>log action</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            Log.log({<span class="hljs-string">"t"</span>:<span class="hljs-string">"camera3d"</span>, <span class="hljs-string">"f"</span>:<span class="hljs-string">"toggle_csphere"</span>, <span class="hljs-string">"a"</span>:b}); 
+          }<span class="hljs-keyword">else</span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-61">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-61">&#182;</a>
+              </div>
+              <p>revert to prev state of control</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            $timeout(() =&gt; {
+              $rootScope.$apply(() =&gt; {
+                <span class="hljs-keyword">this</span>.control_state[<span class="hljs-string">'csph'</span>] = !<span class="hljs-keyword">this</span>.control_state[<span class="hljs-string">'csph'</span>];
+              });
+            });
+          }
+          <span class="hljs-keyword">break</span>;
+
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'key'</span>:
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'fill'</span>:
+        <span class="hljs-keyword">case</span> <span class="hljs-string">'back'</span>:
+          <span class="hljs-keyword">if</span>(Camera3d.light(control)){
+            <span class="hljs-keyword">let</span> b = <span class="hljs-keyword">this</span>.control_state[control];
+            Camera3d.toggle_light({name:control, val:b});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-62">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-62">&#182;</a>
+              </div>
+              <p>log action</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            Log.log({<span class="hljs-string">"t"</span>:<span class="hljs-string">"camera3d"</span>, <span class="hljs-string">"f"</span>:<span class="hljs-string">"toggle_light"</span>, <span class="hljs-string">"a"</span>:b}); 
+          }<span class="hljs-keyword">else</span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>revert to prev state of control</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            $timeout(() =&gt; {
+              $rootScope.$apply(() =&gt; {
+                <span class="hljs-keyword">this</span>.control_state[control] = !<span class="hljs-keyword">this</span>.control_state[control];
+              });
+            });
+          }
+          <span class="hljs-keyword">break</span>;
+
+        <span class="hljs-keyword">default</span>: 
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!unknown control name = <span class="hljs-subst">${control}</span>`</span>); 
+      }
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <p>shot<br>
+shot = ‘template-name’:JSON-model or ‘template-name’:’model-name’<br>
+shot is converted to an abs_url for eventual invocation of 
+<code>change_state(abs_url)</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    shot(shot){
+      <span class="hljs-keyword">var</span> abs_url_components, 
+          abs_url=<span class="hljs-string">'/'</span>,
+          i=<span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>guard - non-empty string</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(!check.unemptyString(shot)){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Narrative.shot(shot = <span class="hljs-subst">${shot}</span>) Not unempty string)`</span>);
+        <span class="hljs-keyword">return</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>guard - has form template-name:JSON or template-name:model-name</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(!<span class="hljs-regexp">/:/</span>.test(shot)){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Narrative.shot(shot = <span class="hljs-subst">${shot}</span>) NOT well-formed)`</span>);
+        <span class="hljs-keyword">return</span>;
+      }
+
+      Mediator.queue.ready = <span class="hljs-literal">false</span>;
+      abs_url_components = <span class="hljs-keyword">this</span>.stateObj.abs_url.split(<span class="hljs-string">'/'</span>); 
+      abs_url_components.pop();
+      <span class="hljs-keyword">if</span>(abs_url_components[<span class="hljs-number">0</span>] === <span class="hljs-string">''</span>){
+        abs_url_components.shift();
+      }
+
+      <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> c <span class="hljs-keyword">of</span> abs_url_components){
+        abs_url += <span class="hljs-string">`<span class="hljs-subst">${c}</span>/`</span>;
+      }
+      abs_url += shot;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>if shot is json embed json model into scope and rename model to:
+<code>&#39;scope&#39;${frame}</code> - exp: JSON model -&gt; ‘scope27’<br>
+The JSON is parsed to a model object and written to 
+<code>narrative.scope().shot</code><br>
+The keyword ‘scope’ in the url shot component alerts the metastate 
+processor in app.js that the shot model is already on the scope 
+so need not be fetched from Models<br></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.change_shot(abs_url);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>change_scene_by_ui(scene){
+allows logging of action before calling change_scene
+NOTE: this cannot be done in change_scene since change_scene may have
+been invoked by a non-UI action such as a studio score performance,
+and consequently a change_scene action would have already been logged.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    change_scene_by_ui(scene){
+      Log.log({<span class="hljs-string">"t"</span>:<span class="hljs-string">"narrative"</span>, <span class="hljs-string">"f"</span>:<span class="hljs-string">"change_scene"</span>, <span class="hljs-string">"a"</span>:scene});
+      <span class="hljs-keyword">this</span>.change_scene(scene);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-69">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <p>change scene<br>
+builds absolute url from scene components given for the scene in
+config.<br> </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    change_scene(scene){
+      <span class="hljs-keyword">var</span> abs_values = [],
+          abs_params = {},
+          abs_url,
+          i = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <p>guard - non-empty string</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(!check.unemptyString(scene)){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Narrative.change_scene(scene = <span class="hljs-subst">${scene}</span> - Not unempty string)`</span>);
+        <span class="hljs-keyword">return</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <p>guard - scene among config.scenes
+technique using check-more-types.js</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(!check.oneOf(<span class="hljs-built_in">Object</span>.keys(config.scenes), scene)){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Narrative.change_scene(scene = <span class="hljs-subst">${scene}</span> - Not in config.scenes)`</span>);
+        <span class="hljs-keyword">return</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <p>technique using check-types.js
+     if(check.any(check.apply(Object.keys(config.scenes), (s) =&gt; {
+       s === scene.valueOf();
+     }))){
+       console.log(<code>!Narrative.change_scene(scene = ${scene} - Not in config.scenes)</code>);
+     return;
+     }</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-73">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-73">&#182;</a>
+              </div>
+              <p>if scene is changed by action-msg rather than UI - sync UI via this.scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(scene !== <span class="hljs-keyword">this</span>.scene){
+        $timeout(() =&gt; {
+          $rootScope.$apply(() =&gt; {
+            <span class="hljs-keyword">this</span>.scene = scene; <span class="hljs-comment">// change UI if change is by action-message</span>
+          });
+        });
+        <span class="hljs-keyword">this</span>.scene = scene; <span class="hljs-comment">// change narrative property now for further analysis</span>
+
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-74">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-74">&#182;</a>
+              </div>
+              <p>if scene is not previous url scene get params state and urls</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.scene !== <span class="hljs-keyword">this</span>.stateObj.scene){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-75">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-75">&#182;</a>
+              </div>
+              <p>this.abs_params, abs_values</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        abs_params = config.scenes[<span class="hljs-keyword">this</span>.scene];</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-76">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-76">&#182;</a>
+              </div>
+              <pre><code>   <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-keyword">this</span>.terms){
+   }
+</code></pre><p>abs_values</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-keyword">this</span>.terms){
+          abs_values[i++] = abs_params[p];
+        }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-77">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-77">&#182;</a>
+              </div>
+              <p>urls</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        abs_url = <span class="hljs-string">'/'</span>;
+        abs_url += abs_values.join(<span class="hljs-string">'/'</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-78">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-78">&#182;</a>
+              </div>
+              <p>if shot is json embed json model into scope and rename model to:
+<code>&#39;scope&#39;${frame}</code> - exp: JSON model -&gt; ‘scope27’<br>
+The JSON is parsed to a model object and written to 
+<code>narrative.scope().shot</code><br>
+The keyword ‘scope’ in the url shot component alerts the metastate 
+processor in app.js that the shot model is already on the scope 
+so need not be fetched from Models<br></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        <span class="hljs-keyword">this</span>.change_shot(abs_url);
+      }
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-79">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-79">&#182;</a>
+              </div>
+              <p>change_shot<br></p>
+<ul>
+<li>simplifies url and then calls <code>change_state(simplified-url)</code>:<ul>
+<li>replace JSON-string shot-model in url by string ‘scope’+frame-number</li>
+<li>parse the JSON to an object ‘model’ and set <code>scope.shot = model</code></li>
+<li>call change_state(url) with the simpler url.</li>
+</ul>
+</li>
+<li>NOTE: the use of JSON-model shots permits dynamic shot cinematography 
+not requiring the model to pre-exist in the Models service cache</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    change_shot(url){
+      <span class="hljs-keyword">var</span> tuple = url.split(<span class="hljs-string">'shot'</span>),
+          shot = [],
+          template,
+          model;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-80">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-80">&#182;</a>
+              </div>
+              <p>guard - non-empty string</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(!check.unemptyString(url)){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Narrative.change_shot(url = <span class="hljs-subst">${url}</span> - Not unempty string)`</span>);
+        <span class="hljs-keyword">return</span>;
+      }
+ 
+      tuple[<span class="hljs-number">1</span>] = <span class="hljs-string">'shot'</span> + tuple[<span class="hljs-number">1</span>];
+      shot = tuple[<span class="hljs-number">1</span>].split(<span class="hljs-regexp">/:(.*)/</span>) || <span class="hljs-string">""</span>;
+  
+      template = shot[<span class="hljs-number">0</span>] || <span class="hljs-string">""</span>;
+      model = tuple[<span class="hljs-number">1</span>].split(<span class="hljs-regexp">/:(.*)?/</span>)[<span class="hljs-number">1</span>] || <span class="hljs-string">""</span>;
+
+  
+      <span class="hljs-keyword">if</span>(!<span class="hljs-regexp">/^{/</span>.test(model)){
+        <span class="hljs-keyword">this</span>.change_state(url);
+      }<span class="hljs-keyword">else</span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-81">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-81">&#182;</a>
+              </div>
+              <p>process url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        model = <span class="hljs-built_in">JSON</span>.parse(model);
+        <span class="hljs-keyword">this</span>.scope().shot = model;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-82">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-82">&#182;</a>
+              </div>
+              <p>new url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        url = tuple[<span class="hljs-number">0</span>] + template + <span class="hljs-string">':scope'</span> + <span class="hljs-keyword">this</span>.frame;
+        <span class="hljs-keyword">this</span>.change_state(url);
+      }
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-83">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-83">&#182;</a>
+              </div>
+              <p>change state via $urlRouterProvider and $location.url(this.delta_url)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    change_state(url){
+      <span class="hljs-keyword">var</span> params = {},
+          values = [],
+          abs_params = {},
+          abs_values = [],
+          delta_values = [],
+          i = <span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-84">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-84">&#182;</a>
+              </div>
+              <p>guard - non-empty string</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(!check.unemptyString(url)){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Narrative.change_state(url = <span class="hljs-subst">${url}</span> - Not unempty string)`</span>);
+        <span class="hljs-keyword">return</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-85">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-85">&#182;</a>
+              </div>
+              <p>guard - convert trailing ‘/‘ (undefined shot) to ‘shot-fixed:’</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(<span class="hljs-regexp">/\/$/</span>.test(url)){
+        url = url + <span class="hljs-string">'shot-fixed:'</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-86">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-86">&#182;</a>
+              </div>
+              <p>guard - replace incorrect shot ‘{}’ by ‘shot-fixed:’</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(<span class="hljs-regexp">/\{}$/</span>.test(url)){
+        url = url.replace(<span class="hljs-regexp">/\{}$/</span>, <span class="hljs-string">"shot-fixed:"</span>);
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-87">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-87">&#182;</a>
+              </div>
+              <p>guard - should NOT contain JSON - removed previously by change_shot()
+or guards</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(<span class="hljs-regexp">/\{/</span>.test(url)){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Narrative.change_state(url = <span class="hljs-subst">${url}</span> - contains JSON - returning)`</span>);
+        <span class="hljs-keyword">return</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-88">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-88">&#182;</a>
+              </div>
+              <p>init new this.stateObj</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.stateObj = {};
+      <span class="hljs-keyword">this</span>.stateObj.abs_params = {};
+      <span class="hljs-keyword">this</span>.stateObj.delta_params = {};
+      <span class="hljs-keyword">this</span>.frame += <span class="hljs-number">1</span>;
+      <span class="hljs-keyword">this</span>.stateObj.frame = <span class="hljs-keyword">this</span>.frame;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-89">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-89">&#182;</a>
+              </div>
+              <p>params from url components; copy of metastate.stateObj.abs_params</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      values = url.slice(<span class="hljs-number">1</span>).split(<span class="hljs-string">'/'</span>);
+      <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-keyword">this</span>.terms){
+        params[p] = values[i];
+        i+=<span class="hljs-number">1</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-90">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-90">&#182;</a>
+              </div>
+              <p>this.stateObj.abs_params</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      abs_params = <span class="hljs-keyword">this</span>.metastate.stateObj.abs_params;
+      i = <span class="hljs-number">0</span>;
+      <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-keyword">this</span>.terms){
+        <span class="hljs-keyword">this</span>.stateObj.delta_params[p] = <span class="hljs-string">""</span>; <span class="hljs-comment">// initial</span>
+        abs_values[i] = <span class="hljs-string">""</span>;                 <span class="hljs-comment">// initial</span>
+        <span class="hljs-keyword">if</span>(params[p].length &gt; <span class="hljs-number">1</span>){
+          <span class="hljs-keyword">this</span>.stateObj.abs_params[p] = params[p];
+          abs_values[i] = params[p];
+        }<span class="hljs-keyword">else</span>{
+          <span class="hljs-keyword">this</span>.stateObj.abs_params[p] = abs_params[p];
+          abs_values[i] = abs_params[p];
+        }
+        i += <span class="hljs-number">1</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-91">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-91">&#182;</a>
+              </div>
+              <p>this.stateObj.delta_params</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      i = <span class="hljs-number">0</span>;
+      <span class="hljs-keyword">this</span>.stateObj.delta_params = {};
+      <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-keyword">this</span>.terms){
+        <span class="hljs-keyword">this</span>.stateObj.delta_params[p] = <span class="hljs-string">""</span>;  <span class="hljs-comment">// initial</span>
+        delta_values[i] = <span class="hljs-string">""</span>;                <span class="hljs-comment">// initial</span>
+        i += <span class="hljs-number">1</span>;
+      }
+      i = <span class="hljs-number">0</span>;
+      <span class="hljs-keyword">for</span>(<span class="hljs-keyword">let</span> p <span class="hljs-keyword">of</span> <span class="hljs-keyword">this</span>.terms){
+        <span class="hljs-keyword">if</span>(params[p].length &gt; <span class="hljs-number">0</span>){
+          <span class="hljs-keyword">if</span>(params[p] !== abs_params[p]){
+            <span class="hljs-keyword">this</span>.stateObj.delta_params[p] = params[p];
+            delta_values[i] = params[p];
+          }
+        }  
+        i+=<span class="hljs-number">1</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-92">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-92">&#182;</a>
+              </div>
+              <p>this.stateObj.scene, this.stateObj.abs_url, this.stateObj.delta_url</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.stateObj.scene = <span class="hljs-keyword">this</span>.stateObj.abs_params[<span class="hljs-string">'scene'</span>].split(<span class="hljs-string">":"</span>)[<span class="hljs-number">0</span>]; 
+      <span class="hljs-keyword">this</span>.stateObj.abs_url = <span class="hljs-string">'/'</span>;
+      <span class="hljs-keyword">this</span>.stateObj.delta_url = <span class="hljs-string">'/'</span>;
+      <span class="hljs-keyword">this</span>.stateObj.abs_url += abs_values.join(<span class="hljs-string">'/'</span>);
+      <span class="hljs-keyword">this</span>.stateObj.delta_url += delta_values.join(<span class="hljs-string">'/'</span>);
+      <span class="hljs-keyword">this</span>.stateObj.control_state = <span class="hljs-keyword">this</span>.control_state;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-93">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-93">&#182;</a>
+              </div>
+              <p>set scene for ui</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      $timeout(() =&gt; {
+        $rootScope.$apply(() =&gt; {
+          <span class="hljs-keyword">this</span>.scene = <span class="hljs-keyword">this</span>.stateObj.scene;
+          <span class="hljs-keyword">this</span>.scope().ui.scene = <span class="hljs-keyword">this</span>.scene;
+        });
+      });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-94">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-94">&#182;</a>
+              </div>
+              <p>diagnostics</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-95">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-95">&#182;</a>
+              </div>
+              <p>metastate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.metastate.stateObjp = <span class="hljs-keyword">this</span>.metastate.stateObj;
+      <span class="hljs-keyword">this</span>.metastate.stateObj = <span class="hljs-keyword">this</span>.stateObj;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-96">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-96">&#182;</a>
+              </div>
+              <p>change state via url<br>
+skip back-fwd processing in $locationChangeSuccess handler</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.backfwd = <span class="hljs-literal">false</span>;
+      <span class="hljs-keyword">this</span>.sequence[<span class="hljs-keyword">this</span>.stateObj.delta_url] = <span class="hljs-keyword">this</span>.frame;
+      <span class="hljs-keyword">this</span>.sequence[<span class="hljs-keyword">this</span>.frame] = <span class="hljs-keyword">this</span>.stateObj;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-97">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-97">&#182;</a>
+              </div>
+              <p> ${this.sequence[this.stateObj.delta_url]}<code>);
+ ${this.sequence[this.frame].abs_url}</code>);</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-98">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-98">&#182;</a>
+              </div>
+              <p>trigger state change</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      $location.url(<span class="hljs-keyword">this</span>.stateObj.delta_url);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-99">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-99">&#182;</a>
+              </div>
+              <p>load current stateObj - no url update is needed</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      history.replaceState(<span class="hljs-keyword">this</span>.stateObj, <span class="hljs-keyword">this</span>.scene); 
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-100">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-100">&#182;</a>
+              </div>
+              <p>TEMP!: expt-test of bindToController{ bgcolor: ‘=’ }</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    test(){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-101">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-101">&#182;</a>
+              </div>
+              <p>if ui-msgbg is used in index.html narrative link-f will not have
+been called yet - so this.scope() and scope will be undefined<br>
+these alternatives place ui and ui.bgcolor on narrative instead
+and then set scope = narrative (this) iff this.scope() is undefined</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">var</span> scope = (<span class="hljs-keyword">this</span>.scope ? <span class="hljs-keyword">this</span>.scope() : <span class="hljs-keyword">this</span>);
+      scope.ui = {};
+      scope.ui.bgcolor=<span class="hljs-string">'black'</span>;      
+      scope.ui.scene = <span class="hljs-keyword">this</span>.scene;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-102">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-102">&#182;</a>
+              </div>
+              <pre><code> <span class="hljs-keyword">if</span>(scope === <span class="hljs-keyword">this</span>){
+ }<span class="hljs-keyword">else</span>{
+ }
+</code></pre>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+      $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+        $rootScope.$apply(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+          scope.ui.bgcolor = <span class="hljs-string">'red'</span>;
+        });
+      }, <span class="hljs-number">1000</span>);
+
+      $timeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+        $rootScope.$apply(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+          scope.ui.bgcolor = <span class="hljs-string">'blue'</span>;
+        });
+      }, <span class="hljs-number">3000</span>);
+    }<span class="hljs-comment">//test</span>
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-103">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-103">&#182;</a>
+              </div>
+              <p>return factory object DDO</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">return</span> {
+    restrict: <span class="hljs-string">'EA'</span>,   <span class="hljs-comment">// attribute preferred for use in &lt;body&gt;</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-104">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-104">&#182;</a>
+              </div>
+              <p>to use bindToController scope must be created so must be 
+isolated ({}) or child (true)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    scope: <span class="hljs-literal">true</span>,    
+    controller: Narrative,      <span class="hljs-comment">// instance of class-ctor Narrative </span>
+    controllerAs: <span class="hljs-string">'narrative'</span>,  <span class="hljs-comment">// standard name for component ctrl instance</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-105">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-105">&#182;</a>
+              </div>
+              <p>binds specified scope-references used by template properties<br>
+use same name in template parent controller and child controller<br>
+‘=’ =&gt; properties are ‘double-bound’ between controllers and template<br>
+‘@’ =&gt; parent properties are written to the template’<br> 
+       but there is no sync between controllers p-&gt;ch or ch-&gt;p</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    bindToController: <span class="hljs-literal">true</span>,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-106">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-106">&#182;</a>
+              </div>
+              <p>link-f unused except for diagnostics</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    link(scope, el, attrs, narrative){
+
+      <span class="hljs-keyword">var</span> _scope = scope;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-107">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-107">&#182;</a>
+              </div>
+              <p>method to get scope reference - crucially important!</p>
+<ul>
+<li>NOTE: scope is needed by metastate processor in app.js
+to compile all dynamic templates</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      narrative.scope = () =&gt; {
+        <span class="hljs-keyword">return</span> _scope;  <span class="hljs-comment">// available via closure</span>
+      };
+
+      Mediator.component(<span class="hljs-string">"narrative"</span>, narrative);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-108">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-108">&#182;</a>
+              </div>
+              <p>initialize Cameras (once) and pass in narrative.scope (critical!)<br> 
+Also set refs to narrative and mediator - crucial!</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      Camera2d.place(scope);
+      Camera2d.set_narrative(narrative);
+      Camera2d.set_mediator(Mediator); <span class="hljs-comment">// also set in Mediator</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-109">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-109">&#182;</a>
+              </div>
+              <p>initialize Camera3d (once) - pass in scope<br></p>
+<ul>
+<li>arg0 = id of canvas3d</li>
+<li>arg1 = name of template_view (and model)</li>
+<li>arg2 = narrative.scope (critical!)</li>
+<li>[arg3] = (optional) reference to procedurally pre-created Three.js 
+scene loaded by index.html script and output as var ‘Scene’ </li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      Camera3d.place(config.canvas3d,
+                     config.scenes[config.opening_scene][<span class="hljs-string">'i3d'</span>],
+                     _scope,
+                     config.Scene);  <span class="hljs-comment">// temp - opening 3D scene</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-110">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-110">&#182;</a>
+              </div>
+              <p>Also set refs to narrative mediator - crucial!</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      Camera3d.set_narrative(narrative);
+      Camera3d.set_mediator(Mediator); <span class="hljs-comment">// also set in Mediator</span>
+    }<span class="hljs-comment">//link-f</span>
+  };<span class="hljs-comment">//return DDO</span>
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

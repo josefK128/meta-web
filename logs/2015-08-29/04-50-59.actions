@@ -1,0 +1,4 @@
+[04:51:36.768] {"t":"narrative","f":"change_scene","a":"circle"},
+[04:51:46.767] {"t":"narrative","f":"change_state","a":"/circle:/i3d-simple:simple_red/i2d-scene:mf2d0/base-skycube:test_cube/ui-msgbg/MS"},
+[04:52:01.772] {"t":"narrative","f":"change_scene","a":"stocks"},
+[04:52:16.761] {"t":"location","f":"url","a":["escher://i2d-scene:mf2d0///"]},

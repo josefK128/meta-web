@@ -1,0 +1,10 @@
+bower check-new     Checking for new versions of the project dependencies..
+meta-web#0.1.0 C:\public_html\test\angular-es6\meta-y
+├── angular#1.4.0-rc.1 (1.5.0-build.4285+sha.d077966 available)
+├─┬ angular-ui-grid#3.0.0-rc.20 (3.0.6 available)
+│ └── angular#1.4.0-rc.1 incompatible with ~1.2.16 (1.2.29-build.602+sha.788885c available, latest is 1.5.0-build.4285+sha.d077966)
+├─┬ angular-ui-router#0.2.14 (0.2.15 available)
+│ └── angular#1.4.0-rc.1 (1.5.0-build.4285+sha.d077966 available)
+├── jquery#2.1.4 (latest is 3.0.0-alpha1+compat)
+├── three.js#0.70.0 (latest is 0.71.0)
+└── traceur-runtime#0.0.87 (latest is 0.0.91)

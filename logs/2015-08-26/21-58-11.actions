@@ -1,0 +1,6 @@
+[21:58:30.372] {"t":"camera2d","f":"bezier"},
+[21:58:40.370] {"t":"camera3d","f":"bezier"},
+[21:59:00.367] {"t":"camera3d","f":"panflyBy","a":{"r":0.7854,"d":3}},
+[21:59:03.363] {"t":"camera3d","f":"lookAt"},
+[22:00:07.005] {"t":"camera2d","f":"bezier"},
+[22:00:17.052] {"t":"camera3d","f":"bezier"},

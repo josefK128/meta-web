@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>i3d-spotlight-directive.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="..\..\docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>i3d-spotlight-directive.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>i3d-spotlight-directive.js</li>
+<li><p>creates three.js component registered with Camera3d and added to scene<br>
+pass in params as attrs</p>
+</li>
+<li><p>@dependencies: Camera3d, Transform3d
+@param {services/camera3d-service.js} Camera3d
+@param {services/transform3d-service.js} Transform3d
+@param {services/log-service.js} Log
+@param {utils/colourToHex.js} colourToHex
+@ngInject</p>
+</li>
+<li><p>NOTE: ngInject is used by ngAnnotate to generate a 
+minification-safe injection annotation such as:
+<code>function($scope) =&gt; [&#39;$scope&#39;, function($scope){}]</code></p>
+</li>
+<li>NOTE: $destroy occurs when the angular jQuery wrapper is destroyed.
+Thus the wrapper is removed from the DOM but not the ‘raw’ DOM element
+nor, more importantly, the webgl node in the underlying webgl scenegraph</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+angular.module(<span class="hljs-string">'app'</span>).directive(<span class="hljs-string">"i3dSpotlight"</span>, 
+  <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(Camera3d, Transform3d, Log, colourToHex)</span></span>{
+<span class="hljs-pi">  "use strict"</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>return DDO</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">return</span> {
+    restrict: <span class="hljs-string">'E'</span>,
+    scope: <span class="hljs-string">'true'</span>,
+    replace: <span class="hljs-string">'false'</span>,
+    templateNamespace: <span class="hljs-string">'svg'</span>,
+    link: <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(scope, elem, attrs)</span></span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>vars</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">var</span> id = attrs.id,
+          p = scope.p || {},
+          pid = p.pid,
+          color = attrs.color || <span class="hljs-string">'#ffffff'</span>,
+          intensity = <span class="hljs-built_in">parseFloat</span>(attrs.intensity || <span class="hljs-string">'1.0'</span>),
+          distance = <span class="hljs-built_in">parseFloat</span>(attrs.distance || <span class="hljs-string">'0.0'</span>),
+          angle = <span class="hljs-built_in">parseFloat</span>(attrs.angle || <span class="hljs-string">'1.047197551'</span>), <span class="hljs-comment">// PI/3</span>
+          exponential = <span class="hljs-built_in">parseFloat</span>(attrs.exponential || <span class="hljs-string">'10.0'</span>), 
+          targetx = <span class="hljs-built_in">parseFloat</span>(attrs.targetx || <span class="hljs-string">'0.0'</span>),
+          targety = <span class="hljs-built_in">parseFloat</span>(attrs.targety || <span class="hljs-string">'0.0'</span>),
+          targetz = <span class="hljs-built_in">parseFloat</span>(attrs.targetz || <span class="hljs-string">'0.0'</span>),
+          castShadow = (<span class="hljs-regexp">/true/i</span>).test(attrs.castShadow || <span class="hljs-string">'false'</span>), <span class="hljs-comment">// s-&gt;bool</span>
+          shadowCameraNear = <span class="hljs-built_in">parseFloat</span>(attrs.shadowCameraNear || <span class="hljs-string">'50.0'</span>), 
+          shadowCameraFar = <span class="hljs-built_in">parseFloat</span>(attrs.shadowCameraFar || <span class="hljs-string">'5000.0'</span>), 
+          shadowCameraFOV = <span class="hljs-built_in">parseFloat</span>(attrs.shadowCameraFOV || <span class="hljs-string">'50.0'</span>), 
+          shadowBias = <span class="hljs-built_in">parseFloat</span>(attrs.shadowBias || <span class="hljs-string">'0.0'</span>), 
+          shadowDarkness = <span class="hljs-built_in">parseFloat</span>(attrs.shadowDarkness || <span class="hljs-string">'0.5'</span>), 
+          shadowMapWidth = <span class="hljs-built_in">parseFloat</span>(attrs.shadowMapWidth || <span class="hljs-string">'512'</span>), 
+          shadowMapHeight = <span class="hljs-built_in">parseFloat</span>(attrs.shadowMapHeight || <span class="hljs-string">'512'</span>), 
+          transform = <span class="hljs-built_in">JSON</span>.parse(attrs.transform || <span class="hljs-string">'{}'</span>),
+          light;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>clear and set $scope.p.pid = id for subsequent children<br>
+$scope.p is a different object for each level </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      scope.p = {};
+      scope.p.pid = id;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>convert color name to hex for use in three.js material</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(!<span class="hljs-regexp">/^(#|0x)/</span>.test(color)){
+        color = colourToHex(color);
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>light, direction, angle, shadow</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      light = <span class="hljs-keyword">new</span> THREE.SpotLight(color);
+      light.intensity = intensity;
+      light.distance = distance;
+      light.angle = angle;
+      light.exponential = exponential;
+      light.castShadow = castShadow;
+      light.shadowCameraNear = shadowCameraNear;
+      light.shadowCameraFar = shadowCameraFar;
+      light.shadowCameraFOV = shadowCameraFOV;
+      light.shadowBias = shadowBias;
+      light.shadowDarkness = shadowDarkness;
+      light.shadowMapWidth = shadowMapWidth;
+      light.shadowMapHeight = shadowMapHeight;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>add the Object3D to the scene and store in Camera3d actors by id</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      Camera3d.addActorToScene(id, light, pid);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>transform light - relative to parent in THREE.js scene !!!</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      Transform3d.apply(transform, light);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>target</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      light.target.position.set(targetx,targety,targetz);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>light.lookAt(Camera3d.actor[‘scene’].position); // just in case</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>cleanup</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      elem.on(<span class="hljs-string">"$destroy"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>Camera3d.removeActorFromScene(id);
+scope = null;</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      });
+    }<span class="hljs-comment">//link-f</span>
+  };<span class="hljs-comment">//return DDO</span>
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

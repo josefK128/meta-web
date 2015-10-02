@@ -1,0 +1,174 @@
+<body class="mediaweb" ng-app="app" ng-strict-di ng-controller="NarrativeController" >
+<!--[if lt IE 7]>
+  <p class="chromeframe">You are using an <strong>outdated</strong> browser. 
+  Please <a href="http://browsehappy.com/">upgrade your browser</a> or 
+  <a href="http://www.google.com/chromeframe/?redirect=true">activate 
+  Google Chrome Frame</a> to improve your experience.</p>
+<![endif]-->
+
+
+
+<!-- include html-templates in templates.html accessible via $templateCache -->
+<!-- if possible bug persists in ng-include use gulp-angular-templatecache and
+     append puts of templates to $templateCache to app.run -->
+<div ng-include="'./views/templates.html'" ></div> 
+
+
+
+<!-- 3D: webgl perspective-camera and lights -->
+<!-- @TODO? video - see Dirksen p304 play video in three.js canvas '3D' -->
+<!-- <video id="video" 
+            style="display:none; position:absolute; width:100%; height:100%"
+            src="./video/bg.ogv"
+            controls="false" autoplay="false" >
+     </video> -->
+<canvas id="3D" class="space" 
+  style="z-index:1; pointer-events:auto"  
+        width="100%" height="100%"  
+        ng-hide="narrative.control_state['hide3D']" 
+        class="ng-hide"></canvas> 
+
+
+
+<!-- 2D: svg plane optionally synchronized to 3D as HUD
+     viewBox creates a new coordinate system for the (visible) viewport
+     of children of svg.
+     NOTE: coordinates of elements range from 0 to 100 in x and y.
+     The viewBox defines a cell in an infinite coordinate space.
+     Since the viewport is anchored at (0,0) and is 100x100
+     units exactly match the viewport units 100vw x 100vh.
+     NOTE: children will scale as the window-viewport is re-sized.
+     aspect ratio clipping and justification are specified in 
+     preserveAspectRatio. The default preserveAspectRatio is 
+     mid-x mid-y and scales in this manner but does not crop
+     In order to keep a .stage 100x100 in vector space coordinates
+     for all viewport dimensions preserveAspectRatio = 'none'. -->
+<!-- elements in defs are prototypes able to re-used
+     their values are added to the values of the 'used' elements
+     thus it is easiest if their values are set to zero
+     they are not themselves displayed -->
+<div id="2D" class="stage" 
+     style="z-index:10; pointer-events:none" >  
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:i3d="http://www.i3Dmedia.org/2014/i3d" 
+     xmlns:i2d="http://www.i3Dmedia.org/2014/i2d" 
+     id="s" 
+     width="100%" height="100%" 
+     viewBox="-50, -50, 100, 100" preserveAspectRatio="none" >
+
+  
+  <!-- svg-template-cache -->
+  <!-- include templates in svg-templates.svg accessible via xlink:href="#id" -->
+  <defs ng-include="'./views/templates.svg'"></defs> 
+
+
+  <!-- plane is stage& axes vector space - used for scaling/translating -->
+  <g id="plane" >
+  <g id="zoom_plane" >
+
+    <!-- svg-view-templates are inserted in 'stage' -->
+    <!-- opening scene - replaced by workspace-state views -->
+    <g id="stage" ng-hide="narrative.control_state['hide2D']" class="ng-hide" ui-view >
+
+      <!-- [0] webGL scenegraph -->
+      <g id="opening3D" >
+        <!-- actors -->
+        <g id="actors">
+
+        <!-- PLURAL spheres.i3d -->
+        <!-- NOTE! metaforms.i3d requires the 'E' case for i3d-form -->
+        <!-- element 'i3d-form' indicates a collection of same-type objects -->
+        <!-- NOTE: non-metaforms can also use attribute form  <g i3d-form...> 
+             but best to use the g-form to indicate hierarchical p-child 
+             transform relations -->
+          <i3d-form i3d-template="spheres.i3d" ></i3d-form> 
+          <i3d-form i3d-template="cubes.i3d" ></i3d-form> 
+          <i3d-form i3d-template="grounds.i3d" ></i3d-form> 
+          <i3d-form i3d-template="billboards.i3d" ></i3d-form> 
+          <i3d-form i3d-template="metaforms.i3d" ></i3d-form>
+          <!-- NOTE: <g i3d-form i3d-template="metaforms.i3d" ></g> FAILS! 
+               However-see below for <g i3d-form for actors.metaforms['tree0']
+               THUS - can declare each metaform in list with <g i3d-form ...> -->
+          <i3d-form i3d-template="ambientlights.i3d" ></i3d-form> 
+          <i3d-form i3d-template="directionallights.i3d" ></i3d-form> 
+          <i3d-form i3d-template="axes.i3d" ></i3d-form> 
+  
+          <!-- SINGULAR sphere.i3d -->
+          <!-- element 'g' defines hierarchical p-child transform relations -->
+          <!-- NOTE: can also be <i3d-form ...> but best to indicate 
+                     hierarchical p-child transform relations using g-form -->
+          <g id="singular">>
+            <g i3d-form ng-init="id='csphere'" i3d-template="camerasphere.i3d" ></g>
+            <g i3d-form ng-init="id='sphere2'" i3d-template="sphere.i3d" ></g>
+            <g i3d-form ng-init="id='cube2'" i3d-template="cube.i3d" ></g>
+            <g i3d-form ng-init="id='bb_singular'" i3d-template="billboard.i3d" ></g>
+            <g i3d-form ng-init="id='ground2'" i3d-template="ground.i3d" ></g>
+            <g i3d-form ng-init="node=actors['tree1']" i3d-template="metaform.i3d" ></g>
+            <!-- <g i3d-form ..> attribute form for each metaform in list -->
+            <!-- <g i3d-form ng-init="node=actors.metaforms['tree0']" i3d-template="metaform.i3d" ></g> -->
+            <g i3d-form ng-init="id='alight1'" i3d-template="ambientlight.i3d" ></g> 
+            <g i3d-form ng-init="id='dlight2'" i3d-template="directionallight.i3d" ></g>       
+          </g>
+        </g><!-- actors -->
+      </g><!-- opening3D -->
+
+  
+  
+      <!-- [1] svg scenegraph -->
+      <g id="opening2D" >
+        <!-- bitmap image inside svg-image #svgbitmap -->
+        <g id="bitmap" transform="matrix(1 0 0 1 5 8)" 
+           fill="#ff0000" 
+           style="pointer-events:auto; width:50; height:50" > 
+            <image id="svgbitmap" xlink:href="./images/Escher.png" 
+              x="0" y="0" width="40" height="30" 
+              style="pointer-events:auto; cursor:move"
+              preserveAspectRatio="none"
+              hm-drag="drag($event)" 
+              ng-mousedown="mousedown($event)"
+              ng-mousemove="mousemove($event)"
+              ng-mouseup="mouseup($event)" 
+              ng-mouseout="mouseout($event)" 
+              droptarget
+            />  
+        </g><!-- bitmap -->
+
+        <!-- expt: non-directive use of svg-template in <defs> -->
+        <!-- sets origin for def-disk at (-25,-25) and adds green width=1 stroke -->
+        <!-- NOTE: properties set on template are not modifiable - only
+        additional properties and the parent transform (x,y) of the template
+        coordinate system -->
+        <use xlink:href='#e-disk' id="edisk" x='-25' y='-25' stroke='green' stroke-width='1' />
+
+        <!-- i2d-disk -->
+        <g id="disks">
+          <!-- works but ínvalid values for <use> attr x='0 -25' y='0 -25' --> 
+          <i2d-disk id="disk" x="0" y="0" r="10" fill="red" fill-opacity="0.5" >
+          </i2d-disk>
+
+          <!-- <i2d-disk id="disk" x="-25" y="-25" r="10" fill="red" fill-opacity="0.5" >
+          </i2d-disk> FAILS to find template 'disk.svg' ín $templateCache - bug ?! -->
+          <!-- <i2d-disk id="disk" ></i2d-disk> FAILS -->
+        </g>
+      </g><!-- opening2D --> 
+    </g><!--stage-->
+
+
+
+    <!-- 2D coordinate axes reference -->
+    <!-- turn on/off via top-left UI radio button -->
+    <!-- NOTE!!!!! correction in this case: should be x="-1000" y="1000" -->
+    <g id="axes" style="display:block; pointer-events:none" ng-hide="narrative.control_state['hide2Daxes']" class="ng-hide">
+      <!-- for i3Dmedia.org tosca and cav-localhost -->
+      <image x="-913.25" y="-913.25" width="2100" height="2100" xlink:href="./svg/axes.svg">
+      <!-- NOTE: prev. correction for tosca - Nov20 2014 - no longer needed -->
+      <!-- <image x="-1005" y="-1005" width="2100" height="2100" xlink:href="./svg/axes.svg"> -->
+      </image>
+    </g><!-- axes -->
+
+  </div><!-- zoom_plane -->    
+  </div><!-- plane -->    
+</svg><!-- s -->
+</div><!-- 2D -->
+

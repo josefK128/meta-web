@@ -1,0 +1,7 @@
+[02:18:12.534] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":true}},
+[02:18:25.423] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":true}},
+[02:18:46.152] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":true}},
+[02:19:15.589] {"t":"camera2d","f":"bezier","a":{"d":10}},
+[02:19:15.643] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":true}},
+[02:19:45.220] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":false}},
+[02:20:07.968] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":true}},

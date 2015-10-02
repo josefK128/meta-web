@@ -1,0 +1,39 @@
+{
+  "name": "meta-web",
+  "version": "0.1.0",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/josefK128/meta-web"
+  },
+  "author": {
+    "name": "Mark Rudolph",
+    "email": "mark_rudolph@yahoo.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/josefK128/meta-web/issues"
+  },
+  "homepage": "http://www.i3Dmedia.org",
+  "dependencies": {
+    "angular": "^1.4.0",
+    "angular-ui-router": "^0.2.13",
+    "jquery": "^2.1.3",
+    "traceur-runtime": "^0.0.87",
+    "three.js": "^0.70.0",
+    "angular-ui-grid": "^3.0.0-rc.20"
+  },
+  "non-bower-dependencies": {
+    "check-types": "^3.3.1",
+    "TweenMax": "^1.17.0",
+    "mutation-summary": "^0.0.0",
+    "three.js performance monitor": "mrdoob/stats.js",
+    "stats.js": "^0.1.0",
+    "webgl libs": "https://github.com/yukoba/WebGLBook/tree/master/lib",
+    "webgl-utils.js": "*",
+    "webgl-debug.js": "*",
+    "cuon-utils.js": "*",
+    "cuon-matrix.js": "*"
+  },
+  "devDependencies": {}
+}

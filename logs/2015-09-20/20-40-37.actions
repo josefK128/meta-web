@@ -1,0 +1,6 @@
+[20:40:56.417] {"t":"narrative","f":"change_scene","a":"circle"},
+[20:41:11.407] {"t":"narrative","f":"change_state","a":"/circle:/i3d-simple:simple_red/i2d-scene:mf2d0/base-skycube:test_cube/ui-msgbg:/shot-fixed:"},
+[20:41:21.408] {"t":"narrative","f":"change_scene","a":"stocks"},
+[20:41:36.408] {"t":"narrative","f":"change_state","a":"///i2d-scene:mf2d0///"},
+[20:41:51.422] {"t":"narrative","f":"change_state","a":"////videocam://"},
+[20:42:01.419] {"t":"narrative","f":"change_state","a":"////base-skycube:test_cube//"},

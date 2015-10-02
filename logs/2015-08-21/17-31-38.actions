@@ -1,0 +1,8 @@
+[17:32:14.699] {"t":"camera2d","f":"zoomflyTo","a":{"s":2,"d":5}},
+[17:32:19.753] {"t":"camera2d","f":"zoomflyTo","a":{"s":0.5,"d":5}},
+[17:32:34.679] {"t":"camera2d","f":"zoomflyTo","a":{"s":2,"d":5}},
+[17:32:39.743] {"t":"camera2d","f":"zoomflyTo","a":{"s":0.5,"d":5}},
+[17:33:14.666] {"t":"camera2d","f":"zoomflyTo","a":{"s":2,"d":5}},
+[17:33:19.738] {"t":"camera2d","f":"zoomflyTo","a":{"s":0.5,"d":5}},
+[17:33:34.680] {"t":"camera2d","f":"zoomflyTo","a":{"s":2,"d":5}},
+[17:33:39.759] {"t":"camera2d","f":"zoomflyTo","a":{"s":0.5,"d":5}},

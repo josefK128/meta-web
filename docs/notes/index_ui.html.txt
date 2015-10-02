@@ -1,0 +1,39 @@
+<!-- UI-angular -->
+<!-- NOTE: ui elements are on top of 2D/3D graphics via highest z-index
+     To do so the containing div class 'ui' must use 'position: absolute'
+     hideUI hides the entire UI (except itsel)
+-->
+<div class="ui" style="z-index:100; x:0; y:0; pointer-events:auto; width:16vw; height:70vh; transform:scaleY(0.6) translate(3%, -30%)" ng-cloak>
+  <span><input type="checkbox"
+        value=""
+        ng-model="narrative.ui_state"         
+        ng-change="narrative.change_ui()"
+        ng-cloak />
+        hideUI</span><br/>
+
+  <div id="ui" ng-hide="narrative.ui_state" class="ng-show" style="position:fixed">
+
+    <div id="stats" ng-hide="narrative.control_state['hidefps']" class="ng-show" style="position:fixed">@todo-fps</div></br>
+  
+  scenes:<br/>
+    <label ng-repeat="state in narrative.states" >
+      <input type="radio"
+          value={{state}}
+          ng-model="narrative.state.name"         
+          ng-change="narrative.change_state()"
+          ng-cloak />
+          {{state}}<br/>
+    </label><br/><br/>
+  
+  controls:<br/>
+    <label ng-repeat="control in narrative.controls" >
+      <input type="checkbox"
+          value={{control}}
+          ng-model="narrative.control_state[control]"         
+          ng-change="narrative.change_control(control)"
+          ng-cloak />
+          {{control}}<br/>
+    </label><br/><br/>
+  </div><!-- #ui -->
+</div><!-- .ui -->
+

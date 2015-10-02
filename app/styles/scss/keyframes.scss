@@ -1,0 +1,23 @@
+@keyframes anim {
+  0% { transform: rotateX(0deg)  rotateY(0deg) }
+  25% { transform:  rotateX(-5deg)  rotateY(90deg) }
+  50% { transform:  rotateX(0deg)  rotateY(180deg) }
+  75% { transform:  rotateX(5deg)  rotateY(270deg) }
+  100% { transform:  rotateX(0deg)  rotateY(360deg) }
+}
+
+@keyframes descent {
+  0% { transform: perspective(1800px) translateX(-290px) translateY(500px) translateZ(100px) rotateY(20deg) rotateX(45deg); }
+  40% { transform: perspective(450px) translateX(-450px) translateY(50px) translateZ(200px)  rotateY(15deg) rotateX(30deg);}
+  60% { transform: perspective(620px) translateX(-300px) translateY(-168px) translateZ(300px) rotateY(10deg) rotateX(25deg);}
+  100% { transform: perspective(1800px) translateX(-290px) translateY(500px) translateZ(100px) rotateY(20deg) rotateX(45deg);}
+}
+
+@keyframes stratos {
+  0% { transform: perspective(900px) translateX(-990px) translateY(-50px) translateZ(100px) rotateY(20deg) rotateX(45deg); }
+  20% { transform: perspective(900px) translateX(-990px) translateY(-50px) translateZ(100px) rotateY(20deg) rotateX(45deg); }
+  40% { transform: perspective(342px) translateX(-550px) translateY(72px) translateZ(200px)  rotateY(5deg) rotateX(30deg); }
+  60% { transform: perspective(600px) translateX(-450px) translateY(72px) translateZ(300px) rotateY(0deg) rotateX(25deg); } 
+  100% { transform: perspective(900px) translateX(-990px) translateY(-50px) translateZ(100px) rotateY(20deg) rotateX(45deg); }
+}
+

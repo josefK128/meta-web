@@ -1,0 +1,7 @@
+[17:06:01.620] {"t":"narrative","f":"change_scene","a":"a"},
+[17:06:16.616] {"t":"narrative","f":"change_scene","a":"a0"},
+[17:06:31.616] {"t":"narrative","f":"change_scene","a":"a1"},
+[17:06:41.616] {"t":"narrative","f":"change_scene","a":"a2"},
+[17:06:51.615] {"t":"camera3d","f":"dollyflyTo","a":{"x":10,"y":10,"z":-20,"d":4}},
+[17:07:01.616] {"t":"narrative","f":"change_scene","a":"payments"},
+[17:07:16.614] {"t":"camera3d","f":"toggle_csphere","a":{"val":false}},

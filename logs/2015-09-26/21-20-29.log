@@ -1,0 +1,7 @@
+[21:20:33.347] {"t":"narrative","f":"change_scene","a":"stocks"},
+[21:20:33.786] "/stocks:/i3d-jsonmodels:phonghead_kfb/i2d-scene:defsuse0/grid:/ui-msgbg:/shot-fixed:",
+[21:20:33.786] "/stocks:/i3d-jsonmodels:phonghead_kfb/i2d-scene:defsuse0/grid://",
+[21:20:33.786] "e2e_spec[0] delta_url test failed: /stocks:/i3d-jsonmodels:phonghead_kfb/i2d-scene:defsuse0/grid:// !== //////shot-anim:scope0",
+[21:20:33.787] "e2e_spec[0] abs_url test failed: /stocks:/i3d-jsonmodels:phonghead_kfb/i2d-scene:defsuse0/grid:/ui-msgbg:/shot-fixed: !== /metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope0",
+[21:20:33.788] "e2e_spec[0] shot test failed: {} !== {\"delta\":{\"timeline\":{\"p\":{\"paused\":true,\"repeat\":0},\"actors\":{\"i3d:camera:rotation\":[{\"dur\":3,\"p\":{\"y\":-0.7854,\"immediateRender\":false}}]}}}}",
+[21:20:33.788] {},

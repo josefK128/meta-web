@@ -1,0 +1,8 @@
+"/metaweb:/i3d-empty/i2d-reflect:/empty:/ui-msgbg:/LS:",
+{"a":"starting Mockserver..."},
+{"t":"!Narrative","f":"change_shot","a":"url = /a:/i3d-simple:simple_green/i2d-scene:disks0/base-skycube:test_cube/ui-msgbg:/LS - no JSON"},
+"/a0:/i3d-simple:simple_green/i2d-scene:disks0/base-skycube:test_cube/ui-msgbg:/shot-graft:scope0",
+"/a1:/i3d-simple:simple_green/i2d-scene:disks0/base-skycube:test_cube/ui-msgbg:/shot-graft:scope1",
+"/a2:/i3d-simple:simple_green/i2d-scene:disks0/base-skycube:test_cube/ui-msgbg:/shot-graft:scope2",
+"/a2:/i3d-simple:simple_green/i2d-scene:disks0/base-skycube:test_cube/ui-msgbg:/shot-anim:scope3",
+{"t":"!Narrative","f":"change_shot","a":"url = /payments:/i3d-simple:phong_head_sphere_kfb/i2d-empty:/black:/ui-msgbg:/CU: - no JSON"},

@@ -1,0 +1,6 @@
+[21:24:00.937] {"t":"narrative","f":"change_scene","a":"payments"},
+[21:24:10.923] {"t":"narrative","f":"change_state","a":"///i2d-scene:mf2d0///"},
+[21:24:25.924] {"t":"narrative","f":"change_state","a":"////videocam://"},
+[21:24:35.925] {"t":"camera3d","f":"panflyBy","a":{"r":-0.7854,"d":4}},
+[21:24:50.930] {"t":"camera3d","f":"tiltflyBy","a":{"r":-0.7854,"d":4}},
+[21:25:00.932] {"t":"narrative","f":"change_state","a":"////base-skycube:test_cube//"},

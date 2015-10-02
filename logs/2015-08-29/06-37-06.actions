@@ -1,0 +1,4 @@
+[06:38:09.032] {"t":"narrative","f":"change_scene","a":"payments"},
+[06:38:24.021] {"t":"camera3d","f":"toggle_csphere","a":{"val":false}},
+[06:38:34.014] {"t":"camera3d","f":"toggle_csphere","a":{"val":true}},
+[06:38:44.015] {"t":"camera3d","f":"toggle_light","a":{"name":"key","val":false}},

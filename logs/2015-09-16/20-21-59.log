@@ -1,0 +1,7 @@
+[20:21:59.111] {"t":"stateObj","f":"abs_url","a":"/metaweb:/i3d-empty/i2d-reflect:/empty:/ui-msgbg:/LS:"},
+[20:21:59.203] {"t":"location","f":"url","a":"/"},
+[20:22:13.763] {"a":"starting Mockserver..."},
+[20:22:33.468] {"t":"stateObj","f":"abs_url","a":"/stocks:/i3d-jsonmodels:phonghead_kfb/i2d-scene:defsuse0/grid:/ui-msgbg:/2S:"},
+[20:22:33.469] {"t":"location","f":"url","a":"/stocks:/i3d-jsonmodels:phonghead_kfb/i2d-scene:defsuse0/grid://2S:"},
+[20:22:43.090] {"t":"location","f":"url","a":"///i2d-scene:mf2d0///"},
+[20:22:43.089] {"t":"stateObj","f":"abs_url","a":"/stocks:/i3d-jsonmodels:phonghead_kfb/i2d-scene:mf2d0/grid:/ui-msgbg:/2S:"},

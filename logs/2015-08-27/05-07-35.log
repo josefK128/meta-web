@@ -1,0 +1,3 @@
+[05:07:36.697] {"t":"camera3d","f":"place","a":12},
+[05:07:36.765] {"t":"camerasphere","f":"create","a":"csphere"},
+[05:07:36.765] {"t":"camerasphere","f":"children","a":1},

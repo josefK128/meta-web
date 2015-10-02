@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>transform3d-service.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="..\docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>transform3d-service.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>transform3d-service.js</li>
+<li><p>creates a transform matrix from a transform model.</p>
+</li>
+<li><p>@dependencies: Log<br>
+@param {app/services/log-service} Log<br>
+@ngInject</p>
+</li>
+<li><p>NOTE: ngInject is used by ngAnnotate to generate a 
+minification-safe injection annotation such as:
+<code>function($scope) =&gt; [&#39;$scope&#39;, function($scope){}]</code></p>
+</li>
+<li><p>transform model has form: transform:<br> 
+<code>{t: [tx,ty,tz],
+  q: [qx,qy,qz,qw],
+  e: [ep,ey,er],
+  s: [sx,sy,sz]}</code>
+where t is translation, q is quaternion-rotation, e is euler-rotation
+and s is scale.<br> 
+Each has canonical identity default<br>
+At most one of q or e should be used </p>
+</li>
+<li><p><code>Transform3d.apply(transform, [actor])</code> takes as first arg a (JSON.parsed)
+transform model, i.e. a javascript object containing numeric arrays.<br>
+A transform matrix is created and returned<br>
+An optional second arg is a THREE.js Object3d on which the created
+matrix is applied.</p>
+</li>
+<li><p>NOTE: mm = (new THREE.Matrix4()).set(e0,e1,…,e15) takes arguments in
+row-major order, i.e set(m11,m12,m13,m14,m21,…m44) (using math indices).
+However, when a matrix is decomposed into elements, for example,
+[a0,a1,a2,…,a15] = mm.elements, the a-array is in column-major order,
+i.e [m11,m21,m31,m41,m12,…m44] (using math indices).
+Thus [ei] !== [ai]</p>
+</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+angular.module(<span class="hljs-string">'app'</span>).factory(<span class="hljs-string">'Transform3d'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(Log)</span></span>{
+<span class="hljs-pi">  "use strict"</span>;
+
+  <span class="hljs-keyword">var</span> transform3d;
+
+
+  <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Transform3d</span> </span>{
+    constructor(){}
+
+    apply(transform, actor){
+      <span class="hljs-keyword">var</span> m = <span class="hljs-keyword">new</span> THREE.Matrix4(),  <span class="hljs-comment">// identity matrix</span>
+          mr = <span class="hljs-literal">undefined</span>,
+          mt = <span class="hljs-literal">undefined</span>,
+          ms = <span class="hljs-literal">undefined</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>guard</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(!check.object(transform)){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"!Transform3d.apply(transform - is NOT object)"</span>);
+        Log.log({t:<span class="hljs-string">'!Transform3d'</span>, f:<span class="hljs-string">'apply'</span>, a:<span class="hljs-string">'transform - is NOT object'</span>});
+        <span class="hljs-keyword">return</span> m;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>transform matrix component matrices</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(transform[<span class="hljs-string">'q'</span>]){
+        <span class="hljs-keyword">let</span> qa = transform.q;
+        <span class="hljs-keyword">let</span> q = <span class="hljs-keyword">new</span> THREE.Quaternion(qa[<span class="hljs-number">0</span>],qa[<span class="hljs-number">1</span>],qa[<span class="hljs-number">2</span>],qa[<span class="hljs-number">3</span>]);
+        mr = (<span class="hljs-keyword">new</span> THREE.Matrix4()).makeRotationFromQuaternion(q);
+      }
+      <span class="hljs-keyword">if</span>(transform[<span class="hljs-string">'e'</span>]){
+        <span class="hljs-keyword">let</span> ea = transform.e;
+        <span class="hljs-keyword">let</span> euler = <span class="hljs-keyword">new</span> THREE.Euler(ea[<span class="hljs-number">0</span>],ea[<span class="hljs-number">1</span>],ea[<span class="hljs-number">2</span>]); <span class="hljs-comment">//default pyr (xyz)</span>
+        mr = (<span class="hljs-keyword">new</span> THREE.Matrix4()).makeRotationFromEuler(euler);
+      }
+      <span class="hljs-keyword">if</span>(transform[<span class="hljs-string">'t'</span>]){               
+        <span class="hljs-keyword">let</span> ta = transform.t;
+        mt = (<span class="hljs-keyword">new</span> THREE.Matrix4()).makeTranslation(ta[<span class="hljs-number">0</span>],ta[<span class="hljs-number">1</span>],ta[<span class="hljs-number">2</span>]);
+      }
+      <span class="hljs-keyword">if</span>(transform[<span class="hljs-string">'s'</span>]){               
+        <span class="hljs-keyword">let</span> sa = transform.s;
+        ms = (<span class="hljs-keyword">new</span> THREE.Matrix4()).makeScale(sa[<span class="hljs-number">0</span>],sa[<span class="hljs-number">1</span>],sa[<span class="hljs-number">2</span>]);
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <ul>
+<li>transform matrix - first scale, then rotate, then translate</li>
+<li>NOTE: m = [mt<em>mr</em>ms], so m<em>v = mt</em>(mr<em>(ms</em>v)))</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      m = mt || m;
+      <span class="hljs-keyword">if</span>(mr){
+        m = m.multiply(mr);
+      }
+      <span class="hljs-keyword">if</span>(ms){
+        m = m.multiply(ms);
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>if Object3d-actor is sent as second arg apply matrix to it</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(actor){
+        actor.applyMatrix(m);
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>return created matrix representing model transform input</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">return</span> m;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>for unit test verification - does m1 equal m2?
+careful of precision - .01 error is very generous</p>
+<ul>
+<li>NOTE: m.elements is given in column-major!
+Thus m[i][j].elements = [m00, m10, m20, m30, m01, m11, m21, m31, …]<pre><code>                     column0           , column1 etc...
+</code></pre></li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    verify(m,mm){
+      <span class="hljs-keyword">var</span> a = m.elements,
+          aa = mm.elements,
+          flag = <span class="hljs-literal">true</span>,
+          d = [],
+          sa = [],
+          i;
+      <span class="hljs-keyword">for</span>(i=<span class="hljs-number">0</span>; i&lt;a.length; i++){
+        d[i] = <span class="hljs-built_in">Math</span>.abs(a[i]-aa[i]);
+        sa.push(<span class="hljs-string">"a["</span>+i+<span class="hljs-string">"]="</span> + a[i] + <span class="hljs-string">" aa["</span> + i + <span class="hljs-string">"]="</span> + aa[i] + <span class="hljs-string">" d[i]="</span> + d[i]);
+        <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Math</span>.abs(d[i]) &gt; <span class="hljs-number">0.01</span>){
+          flag = <span class="hljs-literal">false</span>;
+          <span class="hljs-keyword">for</span>(i=<span class="hljs-number">0</span>; i&lt;sa.length; i++){
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"error: "</span> + sa[i]);
+          }
+          <span class="hljs-keyword">break</span>;
+        }
+      }
+      <span class="hljs-keyword">return</span> flag;
+    }
+  }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>return factory object<br>
+(redundant) maintenance of Singleton</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">if</span>(!transform3d){
+    transform3d = <span class="hljs-keyword">new</span> Transform3d();  <span class="hljs-comment">// create Transform3d singleton once</span>
+  }
+  <span class="hljs-keyword">return</span> transform3d;
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

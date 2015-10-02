@@ -1,0 +1,7 @@
+[23:25:44.546] {"t":"camera3d","f":"panflyBy","a":{"r":-0.19635,"d":3}},
+[23:25:50.010] {"t":"camera3d","f":"tiltflyBy","a":{"r":0.19635,"d":3}},
+[23:25:53.603] {"t":"camera3d","f":"tiltflyBy","a":{"r":0.19635,"d":3}},
+[23:25:56.627] {"t":"camera3d","f":"panflyBy","a":{"r":-0.19635,"d":3}},
+[23:26:50.938] {"t":"camera3d","f":"billboardsFaceCamera"},
+[23:27:03.780] {"t":"camera3d","f":"tiltflyBy","a":{"r":0.19635,"d":3}},
+[23:27:07.719] {"t":"camera3d","f":"panflyBy","a":{"r":-0.19635,"d":3}},

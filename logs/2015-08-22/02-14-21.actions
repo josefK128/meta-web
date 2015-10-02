@@ -1,0 +1,4 @@
+[02:14:27.515] {"t":"camera2d","f":"bezier","a":{"d":10}},
+[02:14:44.095] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":false}},
+[02:15:09.384] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":false}},
+[02:15:32.433] {"t":"camera3d","f":"bezier","a":{"d":20,"n":6,"z":true}},

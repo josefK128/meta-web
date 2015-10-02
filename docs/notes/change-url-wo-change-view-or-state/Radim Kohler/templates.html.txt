@@ -1,0 +1,59 @@
+<!-- tpl.layout.html -->
+<div>
+  <section class="main">
+    <section class="map">
+      <div ng-repeat="resto in restos">Marker {{resto}}</div>
+    </section>
+
+    <section class="list">
+      <div ui-view="list"></div>
+    </section>
+  </section>
+
+  <section class="right">
+    <div ui-view="right"></div>
+  </section>
+</div>
+
+
+<!-- tpl.list.html -->
+<div >
+  <h3>List of Restaurants</h3>
+  <ul>
+    <li ng-repeat="item in Model.list" 
+    ><a href="#" ng-click="Model.select($index)">Rest: {{item}}</a></li>
+  </ul>
+  
+  <h4>params</h4>
+  <pre>{{$stateParams | json }}</pre>
+  
+  <h4>{{main.hello()}}</h4>
+  <h4>{{list.hello()}}</h4>
+</div>
+
+
+<!-- tpl.map.html -->
+<div>
+  <a ui-sref="main">home</a> 
+  <div style="width: 200px; height: 200px; background: #afa; margin: 20px;">
+    this is a map of {{val}} restaurants
+  </div>
+</div>
+
+
+<!-- tpl.right.html -->
+<div>
+  This is a tpl.right.html
+  
+  <h4>Price range</h4>
+  <ul>
+  <li ng-repeat="item in ['Budget', 'Mid-range', 'Fine dining']" 
+    ><a ui-sref="main.criteria({criteria: 'price', value: item})">{{item}}</a></li>
+  </ul>
+  
+  <h4>Cuisine</h4>
+  <ul>
+    <li ng-repeat="item in ['Asian', 'Indian', 'Brunch', 'Indonesian', 'Thai']" 
+    ><a ui-sref="main.criteria({criteria: 'cuisine', value: item})">{{item}}</a></li>
+  </ul>
+</div>

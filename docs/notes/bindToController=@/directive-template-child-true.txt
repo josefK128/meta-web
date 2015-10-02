@@ -1,0 +1,44 @@
+<!-- id2-disk directive with scope: true = > new scope but parent
+     is prototype so names on parent are known on child if needed -->
+  <i2d-disk id="disk7" >initial directive</i2d-disk><br/><br/>
+
+<!-- written into DOM -->
+<div ng-style="{background: narrative.bgcolor}" 
+     id="disk7" 
+     bgcolor="narrative.bgcolor" 
+     class="ng-scope ng-binding" 
+     style="background: yellow;">
+       <input type="text" 
+              ng-model="disk.msg" 
+              ng-change="disk.msg_changed()" 
+              class="ng-pristine ng-untouched ng-valid">
+                msg: msg d.bgcolor: yellow n.bgcolor: yellow
+</div>
+
+NOTE: yellow is the value of 'narrative.bgcolor'
+
+
+// template from i2d-disk-directive
+template:
+"<div ng-style='{background: narrative.bgcolor}'>" +
+  "<input type='text' ng-model='disk.msg' ng-change='disk.msg_changed()'>" +
+    "msg: {{disk.msg}} d.bgcolor: {{disk.bgcolor}} n.bgcolor: {{narrative.bgcolor}}" +
+"</div>",
+
+// to use bindToC scope must be isolated ({}) or child (true)
+scope: true,        
+controller: Disk,      // instance of Class-ctor Disk
+controllerAs: 'disk',  // standard name for component controller instance
+                       // i2d-name-directive => Name (ctrl class) -> 'name'
+
+// binds specified scope-references used by template properties
+// use same name in template parent controller and child controller
+// '=' => properties are 'double-bound' between controllers and template
+// '@' => parent properties are written to the template' 
+//        but there is no sync between controllers p->ch or ch->p
+// id and foo are defined in the directive
+// bgcolor is defined in the controller constructor
+bindToController: {
+  bgcolor: '='         
+},
+

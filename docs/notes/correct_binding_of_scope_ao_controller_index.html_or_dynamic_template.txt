@@ -1,0 +1,58 @@
+// correct binding technique in index.html and dynamic templates
+
+// index.html
+// and ui-msgbg.html template
+
+    <ui-msgbg id="msgbg7" bgcolor='ui.bgcolor' ></ui-msgbg><br/>
+
+
+
+// ui-msgbg-directive.js
+
+    template: "<div ng-style='{background: msgbg.bgcolor}' >" +
+    "<input type='text' ng-model='msgbg.msg' ng-change='msgbg.msg_changed()'>" +
+     "msg: {{msgbg.msg}} d.bgcolor: {{msgbg.bgcolor}} " +
+       "n.bgcolor: {{$parent.ui.bgcolor}} </div>",
+  
+    // to use bindToC scope must be isolated ({}) or child (true)
+    // NOTE: can be either but if isolated {} then diagnostic to reference 
+    // narrative.bgcolor must be $parent.narrative.bgcolor
+    // NOTE: $parent.narrative.bgcolor works for both {} and child scoping
+    // so only the scope value needs to change to switch between isolated and 
+    // child scope name inheritance
+    scope: {},        
+    controller: Msgbg,      // instance of Class-ctor Msgbg
+    controllerAs: 'msgbg',  // standard name for component controller instance
+                           // i0d-name-directive => Name (ctrl class) -> 'name'
+
+    // binds specified scope-references used by template properties
+    // use same name in template parent controller and child controller
+    // '=' => properties are 'double-bound' between controllers and template
+    // '@' => parent properties are written to the template' 
+    //        but there is no sync between controllers p->ch or ch->p
+    // id and foo are defined in the directive
+    // bgcolor is defined in the controller constructor
+    bindToController: {
+      bgcolor: '='         
+    },
+
+
+
+// mw-narrative-directive.js
+    // TEMP!: expt-test of bindToController{ bgcolor: '=' }
+    test(){
+      // if ui-msgbg is used in index.html narrative link-f will not have
+      // been called yet - so this.scope() and scope will be undefined
+      // these alternatives place ui and ui.bgcolor on narrative instead
+      // and then set scope = narrative (this) iff this.scope() is undefined
+      var scope = (this.scope ? this.scope() : this);
+      scope.ui = {};
+      scope.ui.bgcolor='black';      
+      if(scope === this){
+        console.log("@@@@ test(): scope = this");
+      }else{
+        console.log("@@@@ test(): scope = this.scope()");
+      }
+
+
+

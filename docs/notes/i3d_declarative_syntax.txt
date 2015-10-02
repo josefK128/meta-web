@@ -1,0 +1,32 @@
+      <g id="opening3D" >
+        <!-- actors -->
+
+        <!-- PLURAL spheres.i3d -->
+        <!-- NOTE! metaforms.i3d requires the 'E' case for i3d-form -->
+        <!-- element 'i3d-form' indicates a collection of same-type objects -->
+        <!-- NOTE: can also be <g ...> but best to use the g-form to indicate 
+                   hierarchical p-child transform relations -->
+        <i3d-form i3d-template="spheres.i3d" ></i3d-form> 
+        <i3d-form i3d-template="cubes.i3d" ></i3d-form> 
+        <i3d-form i3d-template="grounds.i3d" ></i3d-form> 
+        <i3d-form i3d-template="billboards.i3d" ></i3d-form> 
+        <i3d-form i3d-template="metaforms.i3d" ></i3d-form>
+        <!-- <g i3d-form i3d-template="metaforms.i3d" ></g> FAILS! --> 
+        <i3d-form i3d-template="ambientlights.i3d" ></i3d-form> 
+        <i3d-form i3d-template="directionallights.i3d" ></i3d-form> 
+        <i3d-form i3d-template="axes.i3d" ></i3d-form> 
+
+        <!-- SINGULAR sphere.i3d -->
+        <!-- element 'g' defines hierarchical p-child transform relations -->
+        <!-- NOTE: can also be <i3d-form ...> but best to indicate 
+                   hierarchical p-child transform relations using g-form -->
+        <g i3d-form ng-init="id='csphere'" i3d-template="camerasphere.i3d" ></g>
+        <g i3d-form ng-init="id='sphere2'" i3d-template="sphere.i3d" ></g>
+        <g i3d-form ng-init="id='cube2'" i3d-template="cube.i3d" ></g>
+        <g i3d-form ng-init="id='bb_singular'" i3d-template="billboard.i3d" ></g>
+        <g i3d-form ng-init="id='ground2'" i3d-template="ground.i3d" ></g>
+        <g i3d-form ng-init="node=actors['tree1']" i3d-template="metaform.i3d" ></g>
+        <g i3d-form ng-init="id='alight1'" i3d-template="ambientlight.i3d" ></g> 
+        <g i3d-form ng-init="id='dlight2'" i3d-template="directionallight.i3d" ></g> 
+      </g><!-- opening3D -->
+

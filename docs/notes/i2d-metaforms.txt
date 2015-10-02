@@ -1,0 +1,61 @@
+<!-- i2d-metaforms.svg -->
+<script type="text/ng-template" id="i2d-metaforms.svg">
+<g id='i2d-metaforms' ng-repeat="(id,node) in i2d" >
+  <g id="{{id}}" ng-attr-transform = "{{node.transform}}"
+     ng-include="'i2d-children.svg'" >
+     <use xlink:href="{{node.id}}" />
+  </g>
+</g> 
+</script>
+
+<!-- i2d-children.svg -->
+<script type="text/ng-template" id="i2d-children.svg">
+<g ng-if="node.children">
+  <g ng-repeat="(id,node) in node.children" 
+     ng-attr-transform = "{{node.transform}}"
+     ng-include="'i2d-children.svg'" />
+       <use id="{{id}}" xlink:href="{{node.id}}" 
+  </g>
+</g>
+</script>
+
+  var models = {
+    i2d: {
+      // self-contained 'inline' model
+      // case-by-case inheritance of defs properties
+      'i2d-defsuse': {},  
+
+       // tree of defsuse models 
+      'i2d-metaforms' : {
+        tree0: { id: "#green-square",
+                 transform: 'scale(0.5)',
+                 children: {
+                   '0': { id: "#red-disk",
+                          transform: 'translate(10,15)',
+                          children: { 
+                            "a" : { id: "#green-disk",
+                                    transform: 'translate(-20,-30)',
+                                    children: { 
+                                      "a1" : { id: "#blue-disk",
+                                               transform: 'translate(-10,-10)',
+                                               children: {}
+                                             }
+                                    }
+                                  }
+                          }
+                        },
+                   '1': { id: "#blue-disk",
+                          transform: 'translate(15,25)',
+                          children: {}
+                        },
+                   '2': { id: "#green-disk",
+                          transform: 'translate(20,35)',
+                          children: {}
+                        },
+                   '3': { id: "#blue-disk",
+                          transform: 'translate(0,0)',
+                          children: {}
+                        }
+                 }
+        }//tree0
+      },//i2d-metaforms

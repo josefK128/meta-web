@@ -1,0 +1,30 @@
+<!-- i2d-disk directive -->
+<i2d-disk id="disk7" bgcolor='narrative.bgcolor' >
+  initial directive
+</i2d-disk><br/><br/>
+
+
+<!-- i2d-disk template -->
+template: 
+"<div ng-style='{background: disk.bgcolor}'>" +
+  "<input type='text' ng-model='disk.msg' ng-change='disk.msg_changed()'>" +
+    "msg: {{disk.msg}} d.bgcolor: {{disk.bgcolor}} n.bgcolor: {{$parent.narrative.bgcolor}}" +
+"</div>",
+
+// to use bindToC scope must be isolated {} or child
+scope: {},        
+controller: Disk,      // instance of Class-ctor Disk
+controllerAs: 'disk',  // standard name for component controller instance
+                       // i2d-name-directive => Name (ctrl class) -> 'name'
+
+// binds specified scope-references used by template properties
+// use same name in template parent controller and child controller
+// '=' => properties are 'double-bound' between controllers and template
+// '@' => parent properties are written to the template' 
+//        but there is no sync between controllers p->ch or ch->p
+// id and foo are defined in the directive
+// bgcolor is defined in the controller constructor
+bindToController: {
+  bgcolor: '='         
+},
+

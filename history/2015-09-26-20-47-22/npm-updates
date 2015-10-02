@@ -1,0 +1,36 @@
+[gulp] Using file C:\public_html\test\angular-es6\meta-y\gulpfile.js
+[gulp] Working directory changed to C:\public_html\test\angular-es6\meta-y
+[gulp] Running 'check-npm'...
+[gulp] Finished 'check-npm' in 8.71 ms
+[gulp] Running 'check-bower'...
+[gulp] Finished 'check-bower' in 9.39 ms
+[gulp] Running 'check-versions'...
+[gulp] Finished 'check-versions' in 8.85 μs
+
+Package           Current  Wanted  Latest  Location
+bower               1.4.1   1.5.3   1.5.3  bower
+gulp-concat         2.5.2   2.6.0   2.6.0  gulp-concat
+gulp               3.8.11   3.9.0   3.9.0  gulp
+gulp-jshint        1.10.0  1.11.2  1.11.2  gulp-jshint
+gulp-ng-annotate    0.5.3   0.5.3   1.1.0  gulp-ng-annotate
+gulp-changed        1.2.1   1.3.0   1.3.0  gulp-changed
+gulp-sass           1.3.3   1.3.3   2.0.4  gulp-sass
+gulp-uglify         1.2.0   1.4.1   1.4.1  gulp-uglify
+traceur            0.0.87  0.0.87  0.0.91  traceur
+
+
+
+
+bower check-new     Checking for new versions of the project dependencies..
+meta-web#0.1.0 C:\public_html\test\angular-es6\meta-y
+├── angular#1.4.0-rc.1 (1.5.0-build.4285+sha.d077966 available)
+├─┬ angular-ui-grid#3.0.0-rc.20 (3.0.6 available)
+│ └── angular#1.4.0-rc.1 incompatible with ~1.2.16 (1.2.29-build.602+sha.788885c available, latest is 1.5.0-build.4285+sha.d077966)
+├─┬ angular-ui-router#0.2.14 (0.2.15 available)
+│ └── angular#1.4.0-rc.1 (1.5.0-build.4285+sha.d077966 available)
+├── jquery#2.1.4 (latest is 3.0.0-alpha1+compat)
+├── three.js#0.70.0 (latest is 0.71.0)
+└── traceur-runtime#0.0.87 (latest is 0.0.91)
+
+
+

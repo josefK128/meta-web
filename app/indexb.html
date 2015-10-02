@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<!-- base experience: image-icons, opacity, HTML5 semantic els, hex colors, 
+  fixed positioning -->
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> 
+
+<!-- NOTE: ng-strict-di warns of minification-unsafe dependency annotations
+     as might occur in errors by ng-annotate (applied in build sequence to
+     automatically add minification-safe dependency annotation such as:
+     angular.module('app').<type>( ['scope', function($scope){...}]); -->
+<html lang="en" class="no-js">
+<head>
+  <meta http-equiv="Content-Type" content="text/html charset=utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>meta-web 1.0.0</title>
+
+  <!-- relative links base - required for html5mode fetching -->
+  <!-- disregards url state-name and params when constructing the -->
+  <!-- absolute url for a relative link -->
+  <!-- Thus even if the address bar shows /escher/base2/ui2?c3d='CU'&c2d='LS'
+       the browser still looks for assets relative to base:href which is also
+       the default relative base since it is the location of index.html -->
+  <!-- @TODO: make domain-host independent! possible? -->
+  <!-- <base href="http://tosca/test/angular-es6/meta-y/app/"/> -->
+  <base href="/test/angular-es6/meta-y/app/"/>
+
+
+  <!-- normalize -->
+  <link href="./styles/css/normalize.css" rel="stylesheet">
+
+  <!-- style - 2D-stage 3D-space, ui -->
+  <link href="./styles/css/meta-web.css" rel="stylesheet"> 
+
+  <!-- style - base keyframes -->
+  <!-- <link id='keyframes' href="./styles/css/keyframes.css" rel="stylesheet">
+  -->
+
+  <!-- style - ui-grid -->
+  <link href="./libs/angular-ui-grid/ui-grid.css" rel="stylesheet">
+
+
+  <!-- Fav and touch icons -->
+  <!-- HTML5 shim, for IE6-8 support of HTML5 elements -->
+  <!--[if lt IE 9]>
+    <script src="http://html5shim.googlecode.com/svn/trunk/html5.js" type="text/javascript"></script>
+  <![endif]-->
+  <link rel="shortcut icon" href="./styles/ico/favicon.ico">
+  <!-- pre-dom libs - NOTE: modernizr not available on Google CDN -->
+  <!-- <script src="./libs/modernizr.js"></script> -->
+</head>
+
+
+
+<!-- **************************************************************** -->
+<body class="mediaweb" ng-app="app" ng-strict-di mw-narrative>
+<!--[if lt IE 7]>
+  <p class="chromeframe">You are using an <strong>outdated</strong> browser. 
+  Please <a href="http://browsehappy.com/">upgrade your browser</a> or 
+  <a href="http://www.google.com/chromeframe/?redirect=true">activate 
+  Google Chrome Frame</a> to improve your experience.</p>
+<![endif]-->
+
+
+<!-- include html/svg-templates in templates.html accessible via $templateCache -->
+<!-- NOTE!: currently (4/15) ng-include NO LONGER inits $templateCache ?! -->
+<!-- if bug persists in ng-include use gulp-angular-templatecache and
+     append puts of templates to $templateCache to app.run -->
+<div id="templates" ng-include="'./views/templates.html'" onload="narrative.onload('templates.html loaded')"></div> 
+
+
+
+<!-- 0D: ui-view for background html and/or tables/tables/forms for -->
+<!-- for metaforms or db-oriented applications z-index is default 0 --> 
+<div id="base" class="base" ng-hide="narrative.control_state['hidebase']" class="ng-show" >
+  <!-- <div style="background: url('./images/1.png'); background-repeat:no-repeat; background-size:100% 100%; width:100%; height:100%"></div> -->
+  <!-- uncomment to create background camera image - 'augmented reality' 
+     using getUserMedia -->
+  <!-- <video id="video" base-videocam 
+              style="position:absolute; width:100%; height:100%; z-index:0"
+              controls="false" autoplay>
+  </video>-->
+</div><!-- ui-view='base' -->
+
+
+
+<!-- include webgl shaders, i3d-directive templates, etc. for access by name -->
+<div id="webgl-defs" ng-include="'./views/webgl-defs.html'" onload="narrative.onload('wegbl-defs.html loaded')"></div> 
+
+<!-- 3D: webgl perspective-camera and lights -->
+<!-- @TODO? video - see Dirksen p304 play video in three.js canvas '3D' -->
+<!-- <video id="video" 
+            style="display:none; position:absolute; width:100%; height:100%"
+            src="./video/bg.ogv"
+            controls="false" autoplay="false" >
+     </video> -->
+<canvas id="3D" class="space" 
+  style="z-index:1; pointer-events:auto"  
+        width="100%" height="100%"  
+        ng-hide="narrative.control_state['hide3D']" 
+        class="ng-hide"></canvas> 
+
+
+
+<!-- 2D: svg plane optionally synchronized to 3D as HUD
+     viewBox creates a new coordinate system for the (visible) viewport
+     of children of svg.
+     NOTE: coordinates of elements range from 0 to 100 in x and y.
+     The viewBox defines a cell in an infinite coordinate space.
+     Since the viewport is anchored at (0,0) and is 100x100
+     units exactly match the viewport units 100vw x 100vh.
+     NOTE: children will scale as the window-viewport is re-sized.
+     aspect ratio clipping and justification are specified in 
+     preserveAspectRatio. The default preserveAspectRatio is 
+     mid-x mid-y and scales in this manner but does not crop
+     In order to keep a .stage 100x100 in vector space coordinates
+     for all viewport dimensions preserveAspectRatio = 'none'. -->
+<!-- elements in defs are prototypes able to re-used
+     their values are added to the values of the 'used' elements
+     thus it is easiest if their values are set to zero
+     they are not themselves displayed -->
+<div id="2D" class="stage" 
+     style="z-index:10; pointer-events:none" >  
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:i3d="http://www.i3Dmedia.org/2014/i3d" 
+     xmlns:i2d="http://www.i3Dmedia.org/2014/i2d" 
+     id="s" 
+     width="100%" height="100%" 
+     viewBox="-50, -50, 100, 100" preserveAspectRatio="none" >
+
+  
+  <!-- svg-template-cache -->
+  <!-- include templates in svg-templates.svg accessible via xlink:href="#id" -->
+  <defs id="svg-defs" ng-include="'./views/svg-defs.svg'" onload="narrative.onload('svg-defs.svg loaded')"></defs> 
+
+
+  <!-- plane is stage& axes vector space - used for scaling/translating -->
+  <g id="plane" >
+  <g id="zoom_plane" >
+
+    <!-- temporary animation target 'c' - later remove !!!!!!! -->
+    <rect id="c" x="-1.25" y="-1.25" width="2.5" height="2.5" fill="#00a000" opacity:"0.6">
+    </rect> 
+
+
+    <!-- i2d-svg templates are inserted into 'stage' at i2d ui-view -->
+    <g id="i2d" ng-hide="narrative.control_state['hide2D']" class="ng-hide" >
+      <!-- reflect -->
+      <g id="top" >
+        <rect x="-50" y="-50" width="100" height="49" fill="#DDF" fill-opacity="0.5" />
+        <circle cx="-35" cy="-10" r="5" fill="#ff1000" /> 
+        <text x="-28" y="-7" font-size="11.5px" font-family="neuropol" fill="#AAF">metaweb</text>
+
+        <g id="vtext" font-family="neuropol" font-size="6.3pt" stroke="white" stroke-width="0.5">
+          <text x="-.3" y="-44.2" style="writing-mode: tb; glyph-orientation-vertical: 0;">
+            i3Dmedia  
+          </text> 
+        </g>
+
+        <g id="vtext" font-family="neuropol" font-size="6.3pt" stroke="white" stroke-width="0.5">
+          <text x="-.3" y="-44.2" style="writing-mode: tb; glyph-orientation-vertical: 0;">
+            media  
+          </text> 
+        </g>  
+      </g>
+      
+      <g transform="translate(0 0) scale(1 -1)" mask="url(#mask)">
+        <use xlink:href="#top" x="0" y="0" />
+      </g>
+    </g><!-- 'i2d' -->
+
+
+    <!-- i3d-svg-webgl templates are inserted into 'space' at i3d ui-view  -->
+    <g id="i3d" >
+    </g><!-- 'i3d' -->
+
+
+    <!-- 2D coordinate axes reference -->
+    <!-- turn on/off via top-left UI radio button -->
+    <!-- NOTE!!!!! correction in this case: should be x="-1000" y="1000" -->
+    <g id="axes" style="display:block; pointer-events:none" ng-hide="narrative.control_state['hide2Daxes']" class="ng-hide">
+      <!-- for i3Dmedia.org tosca and cav-localhost -->
+      <image x="-913.25" y="-913.25" width="2100" height="2100" xlink:href="./svg/axes.svg"/>
+      <!-- NOTE: prev. correction for tosca - Nov20 2014 - no longer needed -->
+      <!-- <image x="-1005" y="-1005" width="2100" height="2100" xlink:href="./svg/axes.svg"/> -->
+    </g><!-- axes -->
+
+  </g><!-- zoom_plane -->    
+  </g><!-- plane -->    
+</svg><!-- s -->
+</div><!-- 2D -->
+
+
+
+
+<!-- UI-angular -->
+<!-- NOTE: ui elements are on top of 2D/3D graphics via highest z-index
+     To do so the containing div class 'ui' must use 'position: absolute'
+     hideUI hides the entire UI (except itsel)
+-->
+<div id="stats" ng-hide="narrative.control_state['hidefps']" class="ng-show" style="position:fixed; transform:scaleY(0.85) translateY(-8%)"></div></br></br>
+<!-- <div id="stats" ng-hide="narrative.control_state['hidefps']" class="ng-show" style="position:fixed; transform:scaleY(0.8)"></div></br></br> -->
+
+<div id="ui" class="ui" style="z-index:100; x:0; y:0; pointer-events:auto; width:16vw; height:70vh; transform:scaleY(0.6) translate(3%, -30%)" ng-cloak >
+
+  <span><input type="checkbox"
+        value=""
+        ng-model="narrative.control_state.ui"         
+        ng-change="narrative.change_control('ui')"
+        ng-cloak />
+        ui</span><br/>
+
+  <div id="controls" ng-show="narrative.control_state.ui" class="ng-show" style="position:fixed">
+  <span><input type="checkbox"
+        value=""
+        ng-model="narrative.control_state.scene"         
+        ng-change="narrative.change_control('scene')"
+        ng-cloak />
+        scene</span><br/>
+
+    <ui-msgbg id="msgbg7" msg="ui.scene" bgcolor="ui.bgcolor" ng-show="narrative.control_state.scene" class="ng-show" ></ui-msgbg><br/>
+
+    scenes:<br/>
+    <label ng-repeat="scene in narrative.scenes" >
+      <input type="radio"
+          value={{scene}}
+          ng-model="narrative.scene"         
+          ng-change="narrative.change_scene_by_ui(scene)"
+          ng-cloak />
+          {{scene}}<br/>
+    </label><br/>
+  
+    controls:<br/>
+    <label ng-repeat="control in narrative.controls.slice(2)" > <!-- skip ui,scene -->
+      <input type="checkbox"
+          value={{control}}
+          ng-model="narrative.control_state[control]"         
+          ng-change="narrative.change_control(control)"
+          ng-cloak />
+          {{control}}<br/>
+    </label><br/><br/>
+  </div><!-- #controls --><br/>
+
+</div><!-- #ui -->
+
+
+<!-- library scripts -->
+<!-- traceur-runtime for transpiled ES6 scripts -->
+<script src="./libs/traceur-runtime/traceur-runtime.js"></script>
+
+<!-- angular framework components -->
+<script src="./libs/jquery/dist/jquery.js"></script>
+<script src="./libs/angular/angular.js"></script>
+<script src="./libs/angular-ui-router/release/angular-ui-router.js"></script>
+
+<!-- libs -->
+<script src="./libs/mutation-summary/mutation-summary.js"></script>
+<script src="./libs/three.js/three.js"></script>
+<script src="./libs/three.js/stats.min.js"></script>
+<!-- <script src="./libs/three.js/PlaneBufferGeometry.js"></script> -->
+
+<!-- animation -->
+<script src="./libs/gsap/TweenMax.js" ></script>
+
+<!-- ui-grid -->
+<script src="./libs/angular-ui-grid/ui-grid.js" ></script>
+
+<!-- webgl and matsuda utils -->
+<script src="./libs/webgl/cuon-utils.js"></script>
+<script src="./libs/webgl/cuon-matrix.js"></script> 
+<script src="./libs/webgl/webgl-utils.js"></script>
+<script src="./libs/webgl/webgl-debug.js"></script> 
+
+
+<!-- build -->
+<script src="./build/app.js" ></script>
+
+
+<!-- utilities -->
+<!-- convert common color names to hex -->
+<script src="./utils/colourToHex.js" ></script>
+
+<!-- temporary opening 'metaweb' scene3d - stored in var Scene -->
+<script src="./webGL/simple-scene3d.js" ></script>
+
+<!-- socket.io - for Mediator -->
+<script src="../socket.io.js"></script>
+
+<!-- assertion lib for tests and guards -->
+<!-- NOTE!: order must be check-types before check-more-types.
+     This is because both libs produce a global 'check' object,
+     so are incompatible. check-more-types.js was modified to take an injected
+     'check' object from check-types and add new functions to it.  -->
+<script src="./libs/check-types/check-types.js"></script>
+<script src="./libs/check-more-types/check-more-types.js"></script>
+
+
+<!-- spec-files - injected for test -->
+<script src="../test/spec/unit_spec.js"></script>
+<!-- 5 actions -->
+<!-- <script src="../test/spec/e2e_spec_2015-09-18-02-16-48.js"></script> -->
+<!-- <script src="../test/spec/e2e_spec_2015-09-18-test_OoO.js"></script> --> 
+<!-- 21 actions - filtered -->
+<!-- <script src="../test/spec/e2e_spec_2015-09-19-18-31-10.js"></script> -->
+<!-- 62 actions - full -->
+<!-- <script src="../test/spec/e2e_spec_2015-09-23-17-25-02.js"></script> -->
+<!-- 75 actions - full NOTE- 2 bezier fail e2e_test due to random choices -->
+<!-- <script src="../test/spec/e2e_spec_2015-09-18-02-16-48.js"></script> -->
+<!-- 78 actions - full -->
+<script src="../test/spec/e2e_spec_2015-09-29-17-58-52.js"></script> 
+
+
+
+
+<!-- production configuration -->
+<!-- models -->
+<div id="models">
+<!-- base -->
+<script src="./scripts/models/base/base-skycube-rotate/vasarely.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/action_ski.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/action_skate.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/blocks.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/blocks_stream.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/blocks_center.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/dome.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/mf.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/skybox/moon.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/red_moon.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/red_moon_bg.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/test_bg.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/skybox/sky.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/skybox/snow.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotate/skybox/space.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotatewarp/mf_warp_img.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotatewarp/mf_warp_lgrad.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotatewarp/mf_warp_rp_lgrad.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotatewarp/mf_warp_rgrad.js" ></script>
+<script src="./scripts/models/base/base-skycube-rotatewarp/mf_warp_rp_rgrad.js" ></script>
+
+<script src="./scripts/models/base/base-skycube-i/snow.js" ></script>
+<script src="./scripts/models/base/base-skycube-i/vasarely_nearpsp.js" ></script>
+<script src="./scripts/models/base/base-skycube-descent/gladioluses.js" ></script>
+<script src="./scripts/models/base/base-skycube-descent/face_test.js" ></script>
+<script src="./scripts/models/base/base-skycube-descent/gladioluses_warp.js" ></script>
+<script src="./scripts/models/base/base-skycube-stratos/stratos.js" ></script>
+<script src="./scripts/models/base/base-skycube/test_cube.js" ></script>
+<script src="./scripts/models/base/base-skycube/no_anim.js" ></script>
+
+<!-- i2d -->
+<script src="./scripts/models/i2d/i2d-scene/defsuse0.js" ></script>
+<script src="./scripts/models/i2d/i2d-scene/disks0.js" ></script>
+<script src="./scripts/models/i2d/i2d-scene/mf2d0.js" ></script>
+<script src="./scripts/models/i2d/i2d-scene/scene2d0.js" ></script>
+
+<!-- i3d -->
+<script src="./scripts/models/i3d/i3d-simple/simple_blue.js" ></script>
+<script src="./scripts/models/i3d/i3d-simple/simple_red.js" ></script>
+<script src="./scripts/models/i3d/i3d-simple/simple_green.js" ></script>
+<script src="./scripts/models/i3d/i3d-simple/simple_green_empty.js" ></script>
+<script src="./scripts/models/i3d/i3d-simple/simple_phong.js" ></script>
+<script src="./scripts/models/i3d/i3d-simple/simple_phong1.js" ></script>
+<script src="./scripts/models/i3d/i3d-simple/simple_phong_kfb.js" ></script>
+<script src="./scripts/models/i3d/i3d-simple/phong_head_sphere_kfb.js" ></script>
+<script src="./scripts/models/i3d/i3d-scene/mf0.js" ></script>
+<script src="./scripts/models/i3d/i3d-scene/mf1.js" ></script>
+<script src="./scripts/models/i3d/i3d-scene/mf2.js" ></script>
+<script src="./scripts/models/i3d/i3d-scene/scene0.js" ></script>
+<script src="./scripts/models/i3d/i3d-scene/scene1.js" ></script>
+<script src="./scripts/models/i3d/i3d-jsonmodels/phonghead_kfb.js" ></script>
+<script src="./scripts/models/i3d/i3d-jsonmodels/phongstatue_kfb.js" ></script>
+<script src="./scripts/models/i3d/i3d-jsonmodels/phongballchair_kfb.js" ></script>
+
+<!-- shot -->
+<script src="./scripts/models/shot/shot-graft/a0.js" ></script>
+<script src="./scripts/models/shot/shot-graft/a0json.js" ></script>
+<script src="./scripts/models/shot/shot-graft/a1json.js" ></script>
+<script src="./scripts/models/shot/shot-graft/growa0json.js" ></script>
+<script src="./scripts/models/shot/shot-graft/growa1json.js" ></script>
+<script src="./scripts/models/shot/shot-graft/growa2json.js" ></script>
+<script src="./scripts/models/shot/shot-anim/s0.js" ></script>
+</div>
+
+
+<!-- configuration and diagnostic sensors for mouse and keyboard -->
+<!-- NOTE: this script is es5 since it is embedded in index.html -->
+<!-- and all app-scripts are statically traceur-transpiled es6->es5 -->
+<script type="text/javascript"> 
+  //-----------------------------------------------
+  // register configuration values
+  var config = {
+    controls: {ui: true,
+               scene: true, 
+               HOME: false,
+               CNTR: false,
+               hide2Daxes: false, 
+               hide2D: false, 
+               hidebase: false,
+               hidefps: false,
+               hide3D: false, 
+               key: true,
+               fill: true,
+               back: true,
+               csph: true
+    },
+    scenes: {
+      metaweb: { scene: 'metaweb:',
+                 i3d: "i3d-empty:",
+                 i2d: "i2d-reflect:",
+                 base: "empty:",
+                 ui: "ui-msgbg:",
+                 shot: "shot-fixed:"},
+      escher: {  scene: "escher:",
+                 i3d: "i3d-simple:simple_red",
+                 i2d: "i2d-scene:mf2d0",
+                 base: "base-skycube:no_anim", // no css3d
+                 //base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 ui: "ui-msgbg:",
+                 shot: "shot-anim:s0"}, // GSAP
+                 //shot: "shot-anim:"},     // no GSAP
+      circle: {  scene: "circle:",
+                 i3d: "i3d-simple:simple_red",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: "shot-graft:a0"},
+      ellipse: { scene: "ellipse:",
+                 i3d: "i3d-simple:simple_red",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: `shot-graft:${a0json}`}, // loaded json a0json
+                                           // use full string, not simple name
+
+      a: { scene: "a:",
+                 i3d: "i3d-simple:simple_green",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: "shot-fixed:"},
+      a0: { scene: "a0:",
+                 i3d: "i3d-simple:simple_green",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: `shot-graft:${growa0json}`}, // loaded json a0json
+      a1: { scene: "a1:",
+                 i3d: "i3d-simple:simple_green",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: `shot-graft:${growa1json}`}, // loaded json a1json
+                                           // use full string, not simple name
+      a2: { scene: "a2:",
+                 i3d: "i3d-simple:simple_green",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: `shot-graft:${growa2json}`}, // loaded json a2json
+                                           // use full string, not simple name
+      b: { scene: "b:",
+                 i3d: "i3d-simple:simple_green",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: "shot-fixed:"},
+      b0: { scene: "b0:",
+                 i3d: "i3d-simple:simple_green",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: `shot-graft:${a0json}`}, // loaded json a0json
+      b1: { scene: "b1:",
+                 i3d: "i3d-simple:simple_green",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: `shot-graft:${a1json}`}, // loaded json a1json
+                                           // use full string, not simple name
+      b2: { scene: "b2:",
+                 i3d: "i3d-simple:simple_green",
+                 i2d: "i2d-scene:disks0",
+                 base: "base-skycube:test_cube", // css3d (overrides GSAP)
+                 //base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: "shot-fixed:"},
+
+      stocks: {  scene: "stocks:",
+                 //i3d: "i3d-scene:mf2",
+                 //i3d: "i3d-jsonmodels:phongballchair_kfb", // ../models2
+                 //i3d: "i3d-jsonmodels:phongstatue_kfb",    // ../models2
+                 i3d: "i3d-jsonmodels:phonghead_kfb",        // ./webgl/models
+                 i2d: "i2d-scene:defsuse0",
+                 base: "grid:",
+                 ui: "ui-msgbg:",
+                 shot: "shot-fixed:"},
+      payments: {scene: "payments:",
+                 //i3d: "i3d-simple:simple_phong_kfb",
+                 i3d: "i3d-simple:phong_head_sphere_kfb",
+                 i2d: "i2d-empty:",
+                 base: "black:",
+                 ui: "ui-msgbg:",
+                 shot: "shot-fixed:"},
+      footprint:{scene: "footprint:",
+                 i3d: "i3d-scene:scene1",
+                 i2d: "i2d-empty:",
+                 base: "escher:",
+                 ui: "ui-msgbg:",
+                 shot: "shot-fixed:"}
+    }, 
+
+    // models are imported from ./scripts_es6/models/**/*.js
+    models: {
+      scene: {}, // @later - holds refs to audio and dialogues for each scene
+      base: {'videocam': {id: "videocam"},
+             'base-skycube': { 'vasarely': vasarely,
+                               'test_bg': test_bg,
+                               'test_cube': test_cube,
+                               'no_anim': no_anim},
+             'base-skycube-i': { 'snow': snow,
+                                 'vasarely': vasarely,
+                                 'vasarely_nearpsp': vasarely_nearpsp},
+             'base-skycube-descent': {'gladioluses': gladioluses,
+                                      'gladioluses_warp': gladioluses_warp,
+                                      'face_test': face_test},
+             'base-skycube-stratos': { 'stratos': stratos },
+             'base-skycube-rotate': { 'vasarely': vasarely,
+                                      'action_ski': action_ski,
+                                      'action_skate': action_skate,
+                                      'blocks': blocks,
+                                      'blocks_stream': blocks_stream,
+                                      'blocks_center': blocks_center,
+                                      'dome': dome,
+                                      'mf': mf,
+                                      'moon': moon,
+                                      'red_moon': red_moon,
+                                      'red_moon_bg': red_moon_bg,
+                                      'sky': sky,
+                                      'snow': snow,
+                                      'space': space,
+                                      'test_bg': test_bg},
+             'base-skycube-rotatewarp': { 'vasarely': vasarely,
+                                          'mf': mf,
+                                          'mf_warp_img': mf_warp_img,
+                                          'mf_warp_lgrad': mf_warp_lgrad,
+                                          'mf_warp_rp_lgrad': mf_warp_rp_lgrad,
+                                          'mf_warp_rgrad': mf_warp_rgrad,
+                                          'mf_warp_rp_rgrad': mf_warp_rp_rgrad}
+      },
+      ui: {},
+      shot: {
+        'shot-graft': {
+          'a0': a0,
+          'a0json': a0json,
+          'a1json': a1json,
+          'growa0json': growa0json,
+          'growa1json': growa1json,
+          'growa2json': growa2json
+        },
+        'shot-anim': {
+          's0': s0
+        },
+        'shot-fixed': {}
+      },
+      i2d: {
+        'i2d-empty': {},
+        'i2d-reflect': {},
+        // i2d-scene:defsuse0 is template:model
+        // NOTE: % is equivalent to viewport units (since viewport is 100x100)
+        'i2d-scene': {
+          'defsuse0': defsuse0,
+          'disks0': disks0,
+          // tree of defsuse models 
+          'mf2d0' : mf2d0,
+          'scene2d0': scene2d0
+        }//i2d-scene
+      },
+      i3d: {
+        'i3d-empty': {},
+        'i3d-simple': {      // i3d_name - for template-view and model
+          'simple_blue': simple_blue,
+          'simple_red': simple_red,
+          'simple_green': simple_green,
+          'simple_green_empty': simple_green_empty,
+          'simple_phong': simple_phong,
+          'simple_phong1': simple_phong1,
+          'simple_phong_kfb': simple_phong_kfb,
+          'phong_head_sphere_kfb': phong_head_sphere_kfb,
+        },//i3d-simple
+        'i3d-scene': {
+          'mf0': mf0,
+          'mf1': mf1,
+          'mf2': mf2,
+          'scene0': scene0,
+          'scene1': scene1
+        },//i3d-scene
+        'i3d-jsonmodels': {
+          'phonghead_kfb': phonghead_kfb,
+          'phongstatue_kfb': phongstatue_kfb,
+          'phongballchair_kfb': phongballchair_kfb
+        }//i3d-jsonmodels
+      }// i3d
+    },// models
+    keyframes: {},
+    opening_scene: 'metaweb', 
+    canvas3d: "3D",
+    Scene: Scene || {},
+    initial_url: '/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-fixed:',
+    templates_url: './views/templates.html',
+    svg_defs_url: './views/svg-defs.svg',
+    webgl_defs_url: './views/webgl-defs.html',
+    mockserver_connect: true,  // then start score by 'alt-3'
+    server_connect: true,     // server logs, records stream & iactive cameras 
+    server_host: 'localhost',
+    http_port: 8080,
+    channels_port: 8081,
+    channels_in: ['actions'],
+    channels_out: ['log', 'actions'],
+    record_stream: true,   // re-record action sequence
+    record_shots: true,   // record (overdub) interactive camera shots
+    log: true,           // log action, abs_url, delta_url and scope.shot
+    unit_test: true,    // test components injected into unit_spec
+    e2e_test: true,   // run e2e_test using action-seq in e2e_spec script 
+    unit_spec: unit_spec,  // function which runs all tests
+    e2e_spec: e2e_spec    // array of action-expect cells
+  };
+  angular.module('app').value('config', config);
+  angular.module('app').value('TweenMax', TweenMax);
+  angular.module('app').value('TimelineMax', TimelineMax);
+  angular.module('app').value('Quad', Quad);
+
+  //-----------------------------------------------
+  // interactive tracking of mouse and keys and selection point
+  var down = false;
+  var keydown = false;
+
+  // mousedown/mouseup and keypress
+  // set focus to target element of mousedown
+  $(document).mousedown(function(e) {
+    down = true;
+    target = document.elementFromPoint(e.clientX, e.clientY);
+    setTimeout(function() {
+      console.log("event from:" + target + " at (" + 
+        e.clientX + "," + e.clientY + ")");
+      target.focus();
+    }, 500);
+  }).mouseup(function() {
+    //console.log("mouseup!");
+    down = false;  
+  }).keydown(function(e) {
+    //console.log("keydown = " + keydown);
+    keydown = true;
+    e.stopPropagation();
+  }).keyup(function() {
+    keydown = false; 
+  });
+</script>
+</body>
+</html>

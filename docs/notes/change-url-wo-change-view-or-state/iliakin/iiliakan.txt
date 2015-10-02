@@ -1,0 +1,23 @@
+// technique due to iliakan see:
+// github.com/angular-ui/ui-router/issues/64
+// NOTE: $scope.on return function which deregisters the 
+var off = $scope.$on('$stateChangeStart', function(e) {
+        e.preventDefault();
+        off();
+});
+$location.path('model/123').replace();
+
+
+// due to laurelnaiad:
+// What jumps out at me is that $stateParams will probably 
+// still have the old values after this happens. So while the 
+// bookmarkability is achieved, any components relying on $stateParams 
+// might be misled unless they were manually updated by the app.
+// assuming $state is injected already
+var off = $scope.$on('$stateChangeStart', function(evt,  toState, toParams, fromState, fromParams) {
+ evt.preventDefault();
+ $state.params = toParams;
+ angular.copy($state.params, $stateParams);
+ off();
+});
+$location.path('model/123').replace();

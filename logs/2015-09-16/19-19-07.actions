@@ -1,0 +1,4 @@
+[19:19:41.212] {"t":"narrative","f":"change_scene","a":"circle"},
+[19:19:51.215] {"t":"narrative","f":"change_state","a":"/circle:/i3d-simple:simple_red/i2d-scene:mf2d0/base-skycube:test_cube/ui-msgbg/MS"},
+[19:20:06.226] {"t":"narrative","f":"change_scene","a":"stocks"},
+[19:20:21.225] {"t":"narrative","f":"change_state","a":"///i2d-scene:mf2d0///"},

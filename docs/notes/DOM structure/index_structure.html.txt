@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en" class="no-js">
+<head>
+  <link href="./styles/css/normalize.css" rel="stylesheet">
+  <link href="./styles/css/meta-web.css" rel="stylesheet">
+</head>
+
+
+<body class="mediaweb" ng-app="app" ng-strict-di mw-narrative >
+
+<div id="templates" ng-include="'./views/templates.html'" onload="narrative.onload('templates.html loaded')"></div> 
+
+<div id="webgl-defs" ng-include="'./views/webgl-defs.js'" onload="narrative.onload('wegbl-defs.js loaded')"></div> 
+
+<canvas id="3D" class="space" 
+  style="z-index:1; pointer-events:auto"  
+        width="100%" height="100%"  
+        ng-hide="narrative.control_state['hide3D']" 
+
+<div id="base" class="base" ng-hide="narrative.control_state['hidebase']" class="ng-show" ></div>
+
+
+<div id="2D" class="stage" 
+     style="z-index:10; pointer-events:none" >  
+<svg xmlns="http://www.w3.org/2000/svg" 
+     xmlns:xlink="http://www.w3.org/1999/xlink"
+     xmlns:i3d="http://www.i3Dmedia.org/2014/i3d" 
+     xmlns:i2d="http://www.i3Dmedia.org/2014/i2d" 
+     id="s" 
+     width="100%" height="100%" 
+
+  <defs iid="svg-defs" ng-include="'./views/svg-defs.svg'" onload="narrative.onload('svg-defs.svg loaded')"></defs> 
+
+  <g id="plane" >
+  <g id="zoom_plane" >
+
+    <g id="stage" ng-hide="narrative.control_state['hide2D']" class="ng-hide" ui-view >
+    </g><!--stage-->
+
+    <g id="axes" style="display:block; pointer-events:none" ng-hide="narrative.control_state['hide2Daxes']" class="ng-hide">
+    </g><!-- axes -->
+
+  </div><!-- zoom_plane -->    
+  </div><!-- plane -->    
+</svg><!-- s -->
+</div><!-- 2D -->
+
+
+<div id="hud" class="ui" style="z-index:100; x:0; y:0; pointer-events:auto; width:16vw; height:70vh; transform:scaleY(0.6) translate(3%, -30%)" ng-cloak>
+  <div id="ui" ng-hide="narrative.ui_state" class="ng-show" style="position:fixed">
+  </div><!-- #ui -->
+</div><!-- .ui -->
+
+
+<script type="text/javascript"> 
+</script>
+</body>
+</html>

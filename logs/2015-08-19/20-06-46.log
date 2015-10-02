@@ -1,0 +1,7 @@
+[20:07:03.063] {"t":"camera2d","f":"dollyX-","a":87},
+[20:07:03.086] {"t":"narrative","f":"shot","a":{"delta":{"timeline":{"p":{"paused":true,"repeat":0,"tweens":[]},"actors":{"i2d:plane":[{"dur":0,"p":{"x":-10,"y":0,"immediateRender":false}}]}}}}},
+[20:07:05.642] {"t":"camera2d","f":"dollyX+","a":81},
+[20:07:05.653] {"t":"narrative","f":"shot","a":{"delta":{"timeline":{"p":{"paused":true,"repeat":0,"tweens":[]},"actors":{"i2d:plane":[{"dur":3,"p":{"x":0,"y":0,"immediateRender":false}}]}}}}},
+[20:07:08.649] {"t":"narrative","f":"shot","a":{"delta":{"timeline":{"p":{"paused":true,"repeat":0,"tweens":[]},"actors":{"i2d:zoom_plane":[{"dur":5,"p":{"scale":2,"svgOrigin":"0% 0%","immediateRender":false}}]}}}}},
+[20:07:27.467] {"t":"narrative","f":"shot","a":{"delta":{"timeline":{"p":{"paused":true,"repeat":0,"tweens":[]},"actors":{"i2d:zoom_plane":[{"dur":5,"p":{"scale":0.5,"svgOrigin":"0% 0%","immediateRender":false}}]}}}}},
+[20:07:32.469] {"t":"narrative","f":"shot","a":{"delta":{"timeline":{"p":{"paused":true,"repeat":0,"tweens":[]},"actors":{"i2d:zoom_plane":[{"dur":5,"p":{"scale":2,"svgOrigin":"0% 0%","immediateRender":false}}]}}}}},

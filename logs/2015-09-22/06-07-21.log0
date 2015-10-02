@@ -1,0 +1,4 @@
+{"t":"camera3d","f":"panflyBy","a":{"r":-0.19635,"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope0",
+"//////shot-anim:scope0",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"y":-0.19635,"immediateRender":false}}]}}}},

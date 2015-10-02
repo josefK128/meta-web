@@ -1,0 +1,60 @@
+
+
+{"t":"camera3d","f":"tiltflyBy","a":{"r":0.19635,"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope0",
+"//////shot-anim:scope0",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"x":0.19635,"immediateRender":false}}]}}}},
+
+
+{"t":"camera3d","f":"center","a":{"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope1",
+"//////shot-anim:scope1",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:position":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i2d:plane":[{"dur":3,"p":{"x":0,"y":0,"immediateRender":false}}],"i2d:zoom_plane":[{"dur":3,"p":{"rotation":0,"svgOrigin":"0% 0%","immediateRender":false}}]}}}},
+
+
+{"t":"camera2d","f":"dollyflyBy","a":{"x":-10,"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope2",
+"//////shot-anim:scope2",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0,"tweens":[]},"actors":{"i2d:plane":[{"dur":3,"p":{"x":-10,"y":0,"immediateRender":false}}]}}}},
+
+
+{"t":"camera3d","f":"center","a":{"d":3}},
+"//////shot-anim:scope3",
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope3",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:position":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i2d:plane":[{"dur":3,"p":{"x":0,"y":0,"immediateRender":false}}],"i2d:zoom_plane":[{"dur":3,"p":{"rotation":0,"svgOrigin":"0% 0%","immediateRender":false}}]}}}},
+
+
+{"t":"camera2d","f":"zoomcutBy","a":{"s":1.1111}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope4",
+"//////shot-anim:scope4",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0,"tweens":[]},"actors":{"i2d:zoom_plane":[{"dur":0,"p":{"scale":1.1111,"svgOrigin":"0% 0%","immediateRender":false}}]}}}},
+
+
+{"t":"camera3d","f":"home","a":{"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope5",
+"//////shot-anim:scope5",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:position":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:scale":[{"dur":3,"p":{"x":1,"y":1,"z":1,"immediateRender":false}}],"i3d:csphere:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i2d:plane":[{"dur":3,"p":{"x":0,"y":0,"immediateRender":false}}],"i2d:zoom_plane":[{"dur":3,"p":{"rotation":0,"scale":1,"svgOrigin":"0% 0%","immediateRender":false}}]}}}},
+
+
+{"t":"camera3d","f":"panflyBy","a":{"r":-0.19635,"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope6",
+"//////shot-anim:scope6",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"y":-0.19635,"immediateRender":false}}]}}}},
+
+
+{"t":"camera3d","f":"home","a":{"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope7",
+"//////shot-anim:scope7",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:position":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:scale":[{"dur":3,"p":{"x":1,"y":1,"z":1,"immediateRender":false}}],"i3d:csphere:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i2d:plane":[{"dur":3,"p":{"x":0,"y":0,"immediateRender":false}}],"i2d:zoom_plane":[{"dur":3,"p":{"rotation":0,"scale":1,"svgOrigin":"0% 0%","immediateRender":false}}]}}}},
+
+
+{"t":"camera3d","f":"panflyBy","a":{"r":-0.19635,"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope8",
+"//////shot-anim:scope8",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"y":-0.19635,"immediateRender":false}}]}}}},
+
+
+{"t":"camera3d","f":"center","a":{"d":3}},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-anim:scope9",
+"//////shot-anim:scope9",
+{"delta":{"timeline":{"p":{"paused":true,"repeat":0},"actors":{"i3d:camera:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:position":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i3d:csphere:rotation":[{"dur":3,"p":{"x":0,"y":0,"z":0,"immediateRender":false}}],"i2d:plane":[{"dur":3,"p":{"x":0,"y":0,"immediateRender":false}}],"i2d:zoom_plane":[{"dur":3,"p":{"rotation":0,"svgOrigin":"0% 0%","immediateRender":false}}]}}}},

@@ -1,0 +1,6 @@
+[05:11:39.536] {"t":"camera3d","f":"zoomflyTo","a":{"s":2,"d":8}},
+[05:11:47.556] {"t":"camera3d","f":"zoomflyTo","a":{"s":1,"d":8}},
+[05:11:55.569] {"t":"camera3d","f":"bezier"},
+[05:12:15.586] {"t":"camera3d","f":"panflyBy","a":{"r":0.7854,"d":3}},
+[05:12:18.591] {"t":"camera3d","f":"tiltflyBy","a":{"r":0.7854,"d":3}},
+[05:12:21.586] {"t":"camera3d","f":"lookAt"},

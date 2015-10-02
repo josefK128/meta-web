@@ -1,0 +1,35 @@
+      // change absolute url to relative-change url corresponding to 
+      // state '{s}{c}':
+      // s refers to a hexadecimal symbol corresponding to one of 16 subsets 
+      // of four ui-views ('ui', 'base', 'i2d', 'i3d') which expect possible 
+      // template changes
+      // c refers to a digit 0-3 corresponding to one of four subsets of camera
+      // shot changes ('c2d', 'c3d')
+      if(!tail.match(/^[\/]{0}[0-1]{4}\//)){
+        if(tail.length > 0){
+          urla = tail.slice(1,-1).split('/'); // cut leading '/' for params
+          console.log(`urla.length = ${urla.length}`);
+          params['scene'] = urla[0];
+          params['ui'] = urla[1];
+          params['base'] = urla[2];
+          params['i2d'] = urla[3];
+          params['i3d'] = urla[4];
+          params['c2d'] = urla[5];
+          params['c3d'] = urla[6];
+          for(let p of Object.keys(params)){
+            console.log(`params[${p}] = ${params[p]}`);
+          }
+        }
+        for(let i of [1,2,3,4]){
+          console.log(`urla[${i}] = ${urla[i]}`);
+          if(urla[i].length > 0){
+            decimal += Math.pow(2, 4-i);
+          }
+        }
+        code = decimal.toString(2,4);
+        delta = code + tail;
+        console.log(`decimal = ${decimal}`);
+        console.log(`code = ${code}`);
+        console.log(`delta = ${delta}`);
+      }
+

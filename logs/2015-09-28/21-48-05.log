@@ -1,0 +1,6 @@
+[21:48:23.959] {"t":"narrative","f":"change_scene","a":"payments"},
+[21:48:24.367] "/payments:/i3d-simple:phong_head_sphere_kfb/i2d-empty:/black:/ui-msgbg:/shot-fixed:",
+[21:48:24.368] "/payments:/i3d-simple:phong_head_sphere_kfb/i2d-empty:/black://",
+[21:48:38.960] {"t":"camera3d","f":"panflyBy","a":{"r":-0.7854,"d":4}},
+[21:48:38.991] "/payments:/i3d-simple:phong_head_sphere_kfb/i2d-empty:/black:/ui-msgbg:/shot-anim:scope1",
+[21:48:38.992] "//////shot-anim:scope1",

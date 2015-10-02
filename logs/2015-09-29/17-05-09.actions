@@ -1,0 +1,5 @@
+[17:05:28.382] {"t":"narrative","f":"change_scene","a":"payments"},
+[17:05:43.378] {"t":"camera3d","f":"panflyBy","a":{"r":-0.7854,"d":4}},
+[17:05:58.379] {"t":"narrative","f":"change_state","a":"////base-skycube:test_cube//shot-fixed:"},
+[17:06:13.373] {"t":"camera3d","f":"panflyTo","a":{"r":0.7854,"d":4}},
+[17:06:23.385] {"t":"camera3d","f":"home","a":{"d":3}},

@@ -1,0 +1,35 @@
+    // * NOTE: lights are children of camerasphere - if csphere.visible
+    //   is changed so do all the child lights ?! (it is inherited)
+    //   Instead change csphere.material.visible which does not affect
+    //   child lights. (property is not inherited)
+    toggle_csphere(a){
+      if(csphere){
+        csphere.material.visible = a.val;
+        $timeout(() => {
+          $rootScope.$apply(() => {
+            narrative.control_state['csph'] = a.val;
+          });
+        });
+        // log action
+        Log.log({"t":"camera3d", "f":"toggle_csphere", "a":a.val}); 
+        // result of narrative.shot logs abs_url, delta_url and shot
+        // The four values comprise an e2e_spec cell
+        narrative.shot("shot-fixed:{}");
+      }
+    }
+    toggle_light(a){
+      if(actors[a.name]){
+        actors[a.name].visible = a.val;
+        $timeout(() => {
+          $rootScope.$apply(() => {
+            narrative.control_state[a.name] = a.val;
+          });
+        });
+      }
+    }
+
+
+{"t":"camera3d","f":"toggle_csphere","a":false},
+"/metaweb:/i3d-empty:/i2d-reflect:/empty:/ui-msgbg:/shot-fixed:scope0",
+{},
+"//////shot-fixed:scope0",

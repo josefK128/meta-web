@@ -1,0 +1,6 @@
+{"t":"narrative","f":"change_scene","a":"payments"},
+"/payments:/i3d-simple:phong_head_sphere_kfb/i2d-empty:/black:/ui-msgbg:/shot-fixed:",
+"/payments:/i3d-simple:phong_head_sphere_kfb/i2d-empty:/black://",
+{"t":"camera3d","f":"panflyBy","a":{"r":-0.7854,"d":4}},
+"/payments:/i3d-simple:phong_head_sphere_kfb/i2d-empty:/black:/ui-msgbg:/shot-anim:scope1",
+"//////shot-anim:scope1",

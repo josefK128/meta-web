@@ -1,0 +1,4 @@
+[03:14:25.110] {"t":"camera3d","f":"place","a":12},
+[03:14:25.212] {"t":"camerasphere","f":"create","a":"csphere"},
+[03:14:25.212] {"t":"camerasphere","f":"children","a":1},
+[03:14:48.951] {"t":"mediator","f":"socket.emit.actions","a":{"t":"location","f":"url","a":"/escher://i2d-scene:mf2d0///"}},

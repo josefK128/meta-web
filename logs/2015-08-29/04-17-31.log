@@ -1,0 +1,8 @@
+[04:17:50.158] {"t":"camera3d","f":"place","a":12},
+[04:17:50.256] {"t":"camerasphere","f":"create","a":"csphere"},
+[04:17:50.257] {"t":"camerasphere","f":"children","a":1},
+[04:18:09.066] {"a":"mediator[action.t] = [object Object]"},
+[04:18:09.068] {"a":"target = [object Object]"},
+[04:18:09.069] {"a":"f = function (url) {\n    if (isUndefined(url)) {\n      return this.$$url;\n    }\n\n    var match = PATH_MATCH.exec(url);\n    if (match[1] || url === '') this.path(decodeURIComponent(match[1]));\n    if (match[2] || match[1] || url === '') this.search(match[3] || '');\n    this.hash(match[5] || '');\n\n    return this;\n  }"},
+[04:18:09.070] {"a":"action.a is array with l = 1"},
+[04:18:09.070] {"t":"mediator","f":"socket.emit.actions","a":{"t":"location","f":"url","a":["/escher://i2d-scene:mf2d0///"]}},

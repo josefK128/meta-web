@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>s0.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="..\..\..\docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>s0.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>s0.js</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>model for shot-anim
+NOTE!: base:cube is sufficient actor name in this case, but the extra 
+suffix is for actor name uniqueness if multiple animations are defined 
+on the same type:id actor. Only the first two string splits
+are used in tuple - type=tuple[0]; id=tuple[1]
+NOTE!: all animations should set timeline.paused:true. This nullifies
+default immediate animating on timeline creation and allows the
+animation to be started at a chosen correct time.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-keyword">var</span> s0 = {
+  delta: {
+    branches: {},
+    timeline: {p:{repeat:-<span class="hljs-number">1</span>, yoyo:<span class="hljs-literal">true</span>},
+               actors:{
+                   <span class="hljs-string">'base:cube'</span>:[{dur:<span class="hljs-number">60</span>, p:{rotationY:<span class="hljs-string">'360'</span>, delay:<span class="hljs-number">0</span>}}, 
+                                {dur:<span class="hljs-number">30</span>, p:{rotationZ:<span class="hljs-string">'-360'</span>, delay:<span class="hljs-number">30</span>}}],
+                   <span class="hljs-string">'i2d:zoom_plane'</span>:[{dur:<span class="hljs-number">30</span>, p:{scale:<span class="hljs-number">0.5</span>, svgOrigin:<span class="hljs-string">'0% 0%'</span>}},
+                                     {dur:<span class="hljs-number">30</span>, p:{rotation:<span class="hljs-number">90</span>, svgOrigin:<span class="hljs-string">'0% 0%'</span>, 
+                                       delay:<span class="hljs-number">30</span>}}],
+                   <span class="hljs-string">'i2d:c'</span>:[{dur:<span class="hljs-number">30</span>, p:{bezier:{autoRotate:<span class="hljs-literal">true</span>, curviness:<span class="hljs-number">2</span>, values:[{x:<span class="hljs-number">0</span>, y:<span class="hljs-number">0</span>}, {x:<span class="hljs-number">10</span>, y:-<span class="hljs-number">10</span>}, {x:<span class="hljs-number">10</span>, y:<span class="hljs-number">0</span>}, {x:<span class="hljs-number">10</span>,y:<span class="hljs-number">10</span>}, {x:<span class="hljs-number">0</span>,y:<span class="hljs-number">10</span>}, {x:<span class="hljs-number">0</span>,y:<span class="hljs-number">0</span>}]}}}] 
+               }
+              }
+  }<span class="hljs-comment">//delta</span>
+};<span class="hljs-comment">//s0</span></pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

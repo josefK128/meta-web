@@ -1,0 +1,3988 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>camera3d-service.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="..\docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>camera3d-service.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>camera3d-service.js</li>
+<li><p>interactive controls for 3d perspective camera with pan-tilt-roll viewing 
+and which is mounted at a surface point of a dollying rotating and zooming
+‘camerasphere’ which carries attached lights (default key, fill, back)<br> 
+Also provides registration and lookup of all 3d actors by name,
+and insertion of actors into webgl scenegraph hierarchies by parent id</p>
+</li>
+<li><p>@dependencies: narrative, mediator, params services, GSAP modules, config<br>
+@param {angular.$rootScope} $rootScope <br>
+@param {angular.$timeout} $timeout   <br>
+@param {app/services/log-service} Log<br>
+@param {created in index.html initialization script} config<br>
+@param {GSAP} TweenMax<br>
+@param {GSAP} TimelineMax<br>
+@param {GSAP} Quad<br>
+@ngInject<br></p>
+</li>
+<li><p>NOTE: ngInject is used by ngAnnotate to generate a 
+minification-safe injection annotation such as:
+<code>function($scope) =&gt; [&#39;$scope&#39;, function($scope){}]</code></p>
+</li>
+<li><p>NOTE: camera can ‘lookAt’ arbitrary points and arbitrary actors by id</p>
+</li>
+<li>NOTE: keeps a separate ‘billboard’ subset of actors able to be oriented </li>
+<li>continually to face the camera</li>
+<li>NOTE: place() injects canvasId and stateDescriptor and possible non-default
+values for (optional) procedurally created scene, clearColor and alpha</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+angular.module(<span class="hljs-string">'app'</span>).service(<span class="hljs-string">'Camera3d'</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">($rootScope, $timeout, 
+  Log, config, TweenMax, TimelineMax, Quad)</span></span>{
+<span class="hljs-pi">  "use strict"</span>;
+
+  <span class="hljs-keyword">var</span> camera3d,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>closure vars so ‘this.f’ calls inside Med/Nar are correct<br>
+if this.med/nar wer instance vars of camera3d ‘this’ would be Camera3d</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      mediator,  
+      narrative,</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>same motivation in key handlers (this = window)<br>
+this.record_shots would be undefined in key handlers</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      record_shots = config.record_shots,
+      log = Log.log;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>other closure vars for camera</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> canvas;
+  <span class="hljs-keyword">var</span> gl;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>ref to THREE.PerspectiveCamera</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> camera;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>parent of camera - ‘csphere’ injected by attachAsSurfaceChild(csphere, r) </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> csphere;         
+  <span class="hljs-keyword">var</span> renderer;        <span class="hljs-comment">// THREE.WebGLRenderer</span>
+  <span class="hljs-keyword">var</span> clearColor;
+  <span class="hljs-keyword">var</span> alpha;
+  <span class="hljs-keyword">var</span> aspect;          <span class="hljs-comment">// w.innerW/w.innerH - for dollyXTo translation factor</span>
+  <span class="hljs-keyword">var</span> fov = <span class="hljs-number">90.0</span>;      <span class="hljs-comment">// default - can be set by Camera3d.place()</span>
+  <span class="hljs-keyword">var</span> radius = <span class="hljs-number">50.0</span>;   <span class="hljs-comment">// default camera z-distance set by radius of csphere </span>
+  <span class="hljs-keyword">var</span> zoom = <span class="hljs-number">1.0</span>;      <span class="hljs-comment">// zoom - dynamic tracking</span>
+  <span class="hljs-keyword">var</span> roll = <span class="hljs-number">0.0</span>;      <span class="hljs-comment">// roll - dynamic tracking</span>
+  <span class="hljs-keyword">var</span> pan = <span class="hljs-number">0.0</span>;       <span class="hljs-comment">// pan - dynamic tracking</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>by default the camera looks at the csphere center - pan/tilt look away</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> tilt = <span class="hljs-number">0.0</span>;      <span class="hljs-comment">// tilt - dynamic tracking</span>
+  <span class="hljs-keyword">var</span> yaw = <span class="hljs-number">0.0</span>;       <span class="hljs-comment">// examine-yaw (rotation of csphere around y-axis)</span>
+  <span class="hljs-keyword">var</span> pitch = <span class="hljs-number">0.0</span>;     <span class="hljs-comment">// examine-pitch (rotation of csphere around x-axis)</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-8">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-8">&#182;</a>
+              </div>
+              <p>scene, actors</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> scene;           <span class="hljs-comment">// NOTE: on scene-change scene is overwritten with new</span>
+  <span class="hljs-keyword">var</span> prev_scene;      <span class="hljs-comment">// save a copy of the 'prev' scene for actor removal</span>
+  <span class="hljs-keyword">var</span> billboardsFace = <span class="hljs-literal">false</span>;  <span class="hljs-comment">// true =&gt; billboards lookAt camera (world pos)</span>
+  <span class="hljs-keyword">var</span> billboardsTarget = <span class="hljs-keyword">new</span> THREE.Vector3(); <span class="hljs-comment">// world position of camera</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-9">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-9">&#182;</a>
+              </div>
+              <p>actors and bbs are registered &amp; added to scene by addActorToScene(id,o,pid)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> billboards = {}; <span class="hljs-comment">// hash of objects with keys directive id, i.e 'name'</span>
+  <span class="hljs-keyword">var</span> actors = {};     <span class="hljs-comment">// hash of objects with keys directive id</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-10">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-10">&#182;</a>
+              </div>
+              <p>fps meter</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> stats = <span class="hljs-literal">null</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-11">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-11">&#182;</a>
+              </div>
+              <p>Vector3</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> x_axis = <span class="hljs-keyword">new</span> THREE.Vector3(<span class="hljs-number">1.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>);
+  <span class="hljs-keyword">var</span> y_axis = <span class="hljs-keyword">new</span> THREE.Vector3(<span class="hljs-number">0.0</span>, <span class="hljs-number">1.0</span>, <span class="hljs-number">0.0</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-12">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-12">&#182;</a>
+              </div>
+              <p>4x4 matrices in column-order(!)<br>
+dynamic copy of csphere.matrix</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> csphere_matrix = <span class="hljs-keyword">new</span> THREE.Matrix4();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-13">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-13">&#182;</a>
+              </div>
+              <p>tmp matrices used in diagnostics transforms and diagnostics</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> matrix = <span class="hljs-keyword">new</span> THREE.Matrix4();
+  <span class="hljs-keyword">var</span> matrixa = <span class="hljs-keyword">new</span> THREE.Matrix4();
+  <span class="hljs-keyword">var</span> matrixb = <span class="hljs-keyword">new</span> THREE.Matrix4();
+  <span class="hljs-keyword">var</span> matrixc = <span class="hljs-keyword">new</span> THREE.Matrix4();
+  <span class="hljs-keyword">var</span> matrixz = <span class="hljs-keyword">new</span> THREE.Matrix4();
+  <span class="hljs-keyword">var</span> rotation_matrix; <span class="hljs-comment">// string for CSS3d matrix3d transform of div id 'i2d'</span>
+  <span class="hljs-keyword">var</span> report_matrix = <span class="hljs-literal">false</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-14">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-14">&#182;</a>
+              </div>
+              <p>diagnostics utility functions - camera world information</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> report_camera_world = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(report_matrix)</span></span>{ 
+      <span class="hljs-keyword">var</span> cam_wp = <span class="hljs-keyword">new</span> THREE.Vector3(),
+          key_wp = <span class="hljs-keyword">new</span> THREE.Vector3(),
+          fill_wp = <span class="hljs-keyword">new</span> THREE.Vector3(),
+          cam_up,
+          i;
+ 
+      cam_wp.setFromMatrixPosition(camera.matrixWorld);
+      cam_up = csphere.localToWorld(camera.up); <span class="hljs-comment">// destroys local camera.up !</span>
+  };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-15">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-15">&#182;</a>
+              </div>
+              <p>camera information</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> report_camera = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(report_matrix)</span></span>{
+      <span class="hljs-keyword">var</span> i;
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"camera.fov is: "</span> + camera.fov);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"camera.position is: "</span>);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"x = "</span> + camera.position.x);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"y = "</span> + camera.position.y);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"z = "</span> + camera.position.z);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"camera.rotation is: "</span>);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"x = "</span> + camera.rotation.x);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"y = "</span> + camera.rotation.y);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"z = "</span> + camera.rotation.z);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"camera.rotation._order is: "</span> + camera.rotation._order);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"camera.up is: "</span>);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"x = "</span> + camera.up.x);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"y = "</span> + camera.up.y);
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"z = "</span> + camera.up.z);
+      <span class="hljs-keyword">if</span>(report_matrix){
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"camera.matrix (in column-order): "</span>);
+        <span class="hljs-keyword">for</span>(i=<span class="hljs-number">0</span>; i&lt;camera.matrix.elements.length; i++){
+          <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"camera.matrix.e["</span> + i + <span class="hljs-string">"] = "</span> + 
+            camera.matrix.elements[i]);
+        }
+      }
+  };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-16">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-16">&#182;</a>
+              </div>
+              <p>examine information from o3d.matrix - local matrix unless world=true
+in which case examines o3d.matrixWorld</p>
+<ul>
+<li>NOTE: if o3d has no object parent (i.e is at the root of the scenegraph)
+then o3d.matrix === o3d.matrixWorld<br>
+This is true for csphere (camerasphere) for example<br>
+reports:<br>
+translation Vector3<br>
+rotation    Quaternion<br>
+scalar      Vector3</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> examine_matrix = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(m)</span></span>{
+    <span class="hljs-keyword">for</span>(<span class="hljs-keyword">var</span> i=<span class="hljs-number">0</span>; i&lt;<span class="hljs-number">16</span>; i++){
+      <span class="hljs-built_in">console</span>.log(<span class="hljs-string">"m["</span> + i + <span class="hljs-string">"] = "</span> + m[i]);
+    }
+
+    <span class="hljs-keyword">var</span> t = <span class="hljs-keyword">new</span> THREE.Vector3();
+    <span class="hljs-keyword">var</span> q = <span class="hljs-keyword">new</span> THREE.Quaternion();
+    <span class="hljs-keyword">var</span> s = <span class="hljs-keyword">new</span> THREE.Vector3();
+    m.decompose(t,q,s);
+  };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-17">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-17">&#182;</a>
+              </div>
+              <p>change camera.aspect on window resize and render w. new projection matrix<br>
+first two lines commented out to allow viewport resize and aspect ratio
+distortion to keep constant x and y projections</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> onWindowResize = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-18">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-18">&#182;</a>
+              </div>
+              <p>camera.aspect = window.innerWidth / window.innerHeight;<br>camera.updateProjectionMatrix();</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    renderer.setSize( <span class="hljs-built_in">window</span>.innerWidth, <span class="hljs-built_in">window</span>.innerHeight );
+    render();
+  };</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-19">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-19">&#182;</a>
+              </div>
+              <p>render scene using camera<br>
+possibly orient billboards to face (lookAt) camera</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">var</span> render = <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span> </span>{
+    <span class="hljs-keyword">if</span>(billboardsFace){
+      billboardsTarget.addVectors(csphere.position, camera.position);
+      billboardsTarget.z *= zoom;  <span class="hljs-comment">// world camera.pos.z follows the radius</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-20">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-20">&#182;</a>
+              </div>
+              <p>of csphere which corresponds to z*zoom</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-built_in">Object</span>.keys(billboards).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(id)</span></span>{
+        billboards[id].lookAt(billboardsTarget);
+      });
+    }
+    <span class="hljs-keyword">if</span>(stats){
+      stats.update();
+    }
+    renderer.render( scene, camera );
+  };
+
+
+
+
+  <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Camera3d</span> </span>{  
+
+    constructor(){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-21">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-21">&#182;</a>
+              </div>
+              <p>use narrative scope to get current shot = narrative.scope().shot<br>
+scope is passed in with Camera3d.place</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.scope = <span class="hljs-literal">undefined</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-22">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-22">&#182;</a>
+              </div>
+              <p>fov = 90deg default - can be set by Camera3d.place()</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.fov = fov;
+      <span class="hljs-keyword">this</span>.tl = {};
+      <span class="hljs-keyword">this</span>.tlp = {};
+      <span class="hljs-keyword">this</span>.shot = {};
+      <span class="hljs-keyword">this</span>.action = {};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-23">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-23">&#182;</a>
+              </div>
+              <p>start stats tracking - fps  </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      $(<span class="hljs-built_in">window</span>).load(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-24">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-24">&#182;</a>
+              </div>
+              <p>fps</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        stats = (<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+          <span class="hljs-keyword">var</span> stats = <span class="hljs-keyword">new</span> Stats();
+          stats.setMode(<span class="hljs-number">0</span>); <span class="hljs-comment">// 0: fps, 1: ms</span>
+          $(<span class="hljs-string">"#stats"</span>).html( stats.domElement ); <span class="hljs-comment">// replace current contents of div</span>
+          <span class="hljs-keyword">return</span> stats;
+        })(); 
+      });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-25">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-25">&#182;</a>
+              </div>
+              <p>key controls:<br></p>
+<ul>
+<li>not-alt  =&gt; ‘cut’ - no anim</li>
+<li>alt  =&gt; ‘fly’ - anim</li>
+<li>not-shft =&gt; rel transform ‘by’</li>
+<li>shft =&gt; abs transform ‘to’</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-built_in">window</span>.addEventListener(<span class="hljs-string">"keyup"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(e)</span></span>{
+        <span class="hljs-keyword">var</span> a;
+        <span class="hljs-keyword">switch</span>(e.keyCode){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-26">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-26">&#182;</a>
+              </div>
+              <p>CENTER/HOME - normalize camera and csphere<br>
+m - center</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">77</span>: 
+            a = {d:<span class="hljs-number">3</span>};
+            <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; home</span>
+              camera3d.home(a);  
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'home'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'home'</span>, a:a});
+              }
+            }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; center - no change to zoom</span>
+              camera3d.center(a);
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'center'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'center'</span>, a:a});
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-27">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-27">&#182;</a>
+              </div>
+              <p>LOOKAT<br>
+l</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">76</span>:
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; billboards</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// free bbs</span>
+                camera3d.billboardsFree();    
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'billboardsFree'</span>});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'billboardsFree'</span>});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// alt-l bbs lookAt camera</span>
+                camera3d.billboardsFaceCamera();
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'billboardsFaceCamera'</span>});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'billboardsFaceCamera'</span>});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// l =&gt; camera</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-28">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-28">&#182;</a>
+              </div>
+              <p>lookAt origin in absolute coords</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                camera.lookAt([<span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>, <span class="hljs-number">0.0</span>]);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'lookAt'</span>, a:[<span class="hljs-number">0.0</span>,<span class="hljs-number">0.0</span>,<span class="hljs-number">0.0</span>]}); 
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'lookAt'</span>, a:[<span class="hljs-number">0.0</span>,<span class="hljs-number">0.0</span>,<span class="hljs-number">0.0</span>]}); 
+                }
+              }<span class="hljs-keyword">else</span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-29">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-29">&#182;</a>
+              </div>
+              <p>lookAt center of Camerasphere</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>                camera3d.lookAt();    
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'lookAt'</span>}); 
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'lookAt'</span>}); 
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-30">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-30">&#182;</a>
+              </div>
+              <p>ZOOM<br>
+a - zoom in          </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">65</span>: 
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+               a = {s:<span class="hljs-number">0.5</span>, d:<span class="hljs-number">3</span>};
+                camera3d.zoomflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {s:<span class="hljs-number">0.9</span>, d:<span class="hljs-number">3</span>};
+                camera3d.zoomflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {s:<span class="hljs-number">0.5</span>};  <span class="hljs-comment">// 90/120</span>
+                camera3d.zoomcutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomcutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomcutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {s:<span class="hljs-number">0.9</span>};
+                camera3d.zoomcutBy(a); <span class="hljs-comment">// 1.0/0.9 = 1.1111</span>
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomcutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomcutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-31">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-31">&#182;</a>
+              </div>
+              <p>s - zoom out          </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">83</span>: 
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {s:<span class="hljs-number">2.0</span>, d:<span class="hljs-number">3</span>};
+                camera3d.zoomflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {s:<span class="hljs-number">1.1111</span>, d:<span class="hljs-number">3</span>};
+                camera3d.zoomflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {s:<span class="hljs-number">2.0</span>};
+                camera3d.zoomcutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomcutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomcutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {s:<span class="hljs-number">1.1111</span>};
+                camera3d.zoomcutBy(a); <span class="hljs-comment">// 1.0/0.9 = 1.1111</span>
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomcutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'zoomcutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-32">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-32">&#182;</a>
+              </div>
+              <p>ROLL<br>
+b - roll neg =&gt; ccw         </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">66</span>: 
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {r:-<span class="hljs-number">1.57</span>, d:<span class="hljs-number">3</span>};  <span class="hljs-comment">// PI/8</span>
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollflyTo'</span>, a:a});
+                camera3d.rollflyTo(a);  
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {r:-<span class="hljs-number">0.3927</span>, d:<span class="hljs-number">3</span>}; <span class="hljs-comment">// PI/4 </span>
+                camera3d.rollflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {r:-<span class="hljs-number">1.57</span>};  
+                camera3d.rollcutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollcutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollcutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {r:-<span class="hljs-number">0.3927</span>};
+                camera3d.rollcutBy(a); <span class="hljs-comment">// 1.0/0.9 = 1.1111</span>
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollcutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollcutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-33">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-33">&#182;</a>
+              </div>
+              <p>n - roll pos =&gt; cw         </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">78</span>:
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+               a = {r:<span class="hljs-number">1.57</span>, d:<span class="hljs-number">3</span>};  <span class="hljs-comment">// PI/8</span>
+                camera3d.rollflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                camera3d.rollflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollflyBy'</span>, a:a});
+                a = {r:<span class="hljs-number">0.3927</span>, d:<span class="hljs-number">3</span>}; <span class="hljs-comment">// PI/4 </span>
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {r:<span class="hljs-number">1.57</span>};  
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollcutTo'</span>, a:a});
+                }
+                camera3d.rollcutTo(a);
+              }<span class="hljs-keyword">else</span>{         
+                a = {r:<span class="hljs-number">0.3927</span>};
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'rollcutBy'</span>, a:a});
+                }
+                camera3d.rollcutBy(a); <span class="hljs-comment">// 1.0/0.9 = 1.1111</span>
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-34">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-34">&#182;</a>
+              </div>
+              <p>PAN/TILT<br>
+left arrow - pan (look) left          </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">37</span>: 
+            <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+              a = {r:<span class="hljs-number">0.7854</span>, d:<span class="hljs-number">3</span>};
+              camera3d.panflyTo(a);  
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'panflyTo'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'panflyTo'</span>, a:a});
+              }
+            }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+              a = {r:<span class="hljs-number">0.19635</span>, d:<span class="hljs-number">3</span>};
+              camera3d.panflyBy(a);
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'panflyBy'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'panflyBy'</span>, a:a});
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-35">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-35">&#182;</a>
+              </div>
+              <p>right arrow - pan (look) right          </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">39</span>: 
+            <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+              a = {r:-<span class="hljs-number">0.7854</span>, d:<span class="hljs-number">3</span>};
+              camera3d.panflyTo(a);  
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'panflyTo'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'panflyTo'</span>, a:a});
+              }
+            }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+              a = {r:-<span class="hljs-number">0.19635</span>, d:<span class="hljs-number">3</span>};
+              camera3d.panflyBy(a);
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'panflyBy'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'panflyBy'</span>, a:a});
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-36">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-36">&#182;</a>
+              </div>
+              <p>up arrow - tilt (look) up          </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">38</span>: 
+            <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+              a = {r:<span class="hljs-number">0.7854</span>, d:<span class="hljs-number">3</span>};
+              camera3d.tiltflyTo(a);  
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'tiltflyTo'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'tiltflyTo'</span>, a:a});
+              }
+            }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+              a = {r:<span class="hljs-number">0.19635</span>, d:<span class="hljs-number">3</span>};
+              camera3d.tiltflyBy(a);
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'tiltflyBy'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'tiltflyBy'</span>, a:a});
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-37">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-37">&#182;</a>
+              </div>
+              <p>down arrow - tilt (look) down          </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">40</span>: 
+            <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+              a = {r:-<span class="hljs-number">0.7854</span>, d:<span class="hljs-number">3</span>};
+              camera3d.tiltflyTo(a);  
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'tiltflyTo'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'tiltflyTo'</span>, a:a});
+              }
+            }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+              a = {r:-<span class="hljs-number">0.19635</span>, d:<span class="hljs-number">3</span>};
+              camera3d.tiltflyBy(a);
+              log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'tiltflyBy'</span>, a:a});
+              <span class="hljs-keyword">if</span>(record_shots){
+                mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'tiltflyBy'</span>, a:a});
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-38">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-38">&#182;</a>
+              </div>
+              <p>EXAMINE - longitudinal - ‘yaw’ - rotate csphere around y-axis<br><br>g =&gt; yaw neg =&gt; ccw         </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">71</span>:    
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {r:-<span class="hljs-number">1.57</span>, d:<span class="hljs-number">3</span>};  <span class="hljs-comment">// PI/8</span>
+                camera3d.yawflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {r:-<span class="hljs-number">0.3927</span>, d:<span class="hljs-number">3</span>}; <span class="hljs-comment">// PI/4 </span>
+                camera3d.yawflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {r:-<span class="hljs-number">1.57</span>};  
+                camera3d.yawcutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawcutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawcutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {r:-<span class="hljs-number">0.3927</span>};
+                camera3d.yawcutBy(a); <span class="hljs-comment">// 1.0/0.9 = 1.1111</span>
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawcutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawcutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-39">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-39">&#182;</a>
+              </div>
+              <p>h - yaw pos =&gt; cw         </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">72</span>:  
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {r:<span class="hljs-number">1.57</span>, d:<span class="hljs-number">3</span>};  <span class="hljs-comment">// PI/8</span>
+                camera3d.yawflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {r:<span class="hljs-number">0.3927</span>, d:<span class="hljs-number">3</span>}; <span class="hljs-comment">// PI/4 </span>
+                camera3d.yawflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {r:<span class="hljs-number">1.57</span>};  
+                camera3d.yawcutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawcutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawcutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {r:<span class="hljs-number">0.3927</span>};
+                camera3d.yawcutBy(a); <span class="hljs-comment">// 1.0/0.9 = 1.1111</span>
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawcutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'yawcutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-40">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-40">&#182;</a>
+              </div>
+              <p>EXAMINE - latitudinal - ‘pitch’ - rotate csphere around x-axis<br>
+j =&gt; pitch neg =&gt; ccw         </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">74</span>:   
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+               a = {r:-<span class="hljs-number">1.57</span>, d:<span class="hljs-number">3</span>};  <span class="hljs-comment">// PI/8</span>
+                camera3d.pitchflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {r:-<span class="hljs-number">0.3927</span>, d:<span class="hljs-number">3</span>}; <span class="hljs-comment">// PI/4 </span>
+                camera3d.pitchflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {r:-<span class="hljs-number">1.57</span>};  
+                camera3d.pitchcutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchcutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchcutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {r:-<span class="hljs-number">0.3927</span>};
+                camera3d.pitchcutBy(a); <span class="hljs-comment">// 1.0/0.9 = 1.1111</span>
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchcutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchcutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-41">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-41">&#182;</a>
+              </div>
+              <p>k - pitch pos =&gt; cw          </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">75</span>:  
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {r:<span class="hljs-number">1.57</span>, d:<span class="hljs-number">3</span>};  <span class="hljs-comment">// PI/8</span>
+                camera3d.pitchflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {r:<span class="hljs-number">0.3927</span>, d:<span class="hljs-number">3</span>}; <span class="hljs-comment">// PI/4 </span>
+                camera3d.pitchflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {r:<span class="hljs-number">1.57</span>};  
+                camera3d.pitchcutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchcutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchcutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {r:<span class="hljs-number">0.3927</span>};
+                camera3d.pitchcutBy(a); <span class="hljs-comment">// 1.0/0.9 = 1.1111</span>
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchcutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'pitchcutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-42">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-42">&#182;</a>
+              </div>
+              <p>DOLLY - translation along axes and more generally<br>
+1 =&gt; dollyx+        </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">49</span>:    
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {x:<span class="hljs-number">20</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {x:<span class="hljs-number">10</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {x:<span class="hljs-number">20</span>};  
+                camera3d.dollycutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {x:<span class="hljs-number">10</span>};
+                camera3d.dollycutBy(a); 
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-43">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-43">&#182;</a>
+              </div>
+              <p>2 - dollyx-        </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">50</span>:  
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {x:-<span class="hljs-number">20</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {x:-<span class="hljs-number">10</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {x:-<span class="hljs-number">20</span>};  
+                camera3d.dollycutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {x:-<span class="hljs-number">10</span>};
+                camera3d.dollycutBy(a); 
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-44">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-44">&#182;</a>
+              </div>
+              <p>6 =&gt; dollyy+        </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">54</span>:    
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {y:<span class="hljs-number">20</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {y:<span class="hljs-number">10</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {y:<span class="hljs-number">20</span>};  
+                camera3d.dollycutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {y:<span class="hljs-number">10</span>};
+                camera3d.dollycutBy(a); 
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-45">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-45">&#182;</a>
+              </div>
+              <p>7 - dollyy-        </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">55</span>:  
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {y:-<span class="hljs-number">20</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {y:-<span class="hljs-number">10</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {y:-<span class="hljs-number">20</span>};  
+                camera3d.dollycutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {y:-<span class="hljs-number">10</span>};
+                camera3d.dollycutBy(a); 
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-46">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-46">&#182;</a>
+              </div>
+              <p>O =&gt; dollyz+        </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">79</span>:    
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {z:<span class="hljs-number">20</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {z:<span class="hljs-number">10</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {z:<span class="hljs-number">20</span>};  
+                camera3d.dollycutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {z:<span class="hljs-number">10</span>};
+                camera3d.dollycutBy(a); 
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-47">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-47">&#182;</a>
+              </div>
+              <p>P - dollyz-        </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">80</span>:  
+            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; fly</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// sh =&gt; abs transform ('to')</span>
+                a = {z:-<span class="hljs-number">20</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyTo(a);  
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{          <span class="hljs-comment">// no-sh =&gt; rel transform ('by')</span>
+                a = {z:-<span class="hljs-number">10</span>, d:<span class="hljs-number">3</span>};  
+                camera3d.dollyflyBy(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollyflyBy'</span>, a:a});
+                }
+              }
+            }<span class="hljs-keyword">else</span>{            <span class="hljs-comment">// no-alt =&gt; cut</span>
+              <span class="hljs-keyword">if</span>(e.shiftKey){ <span class="hljs-comment">// shift  =&gt; 'to'</span>
+                a = {z:-<span class="hljs-number">20</span>};  
+                camera3d.dollycutTo(a);
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutTo'</span>, a:a});
+                }
+              }<span class="hljs-keyword">else</span>{         
+                a = {z:-<span class="hljs-number">10</span>};
+                camera3d.dollycutBy(a); 
+                log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                <span class="hljs-keyword">if</span>(record_shots){
+                  mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'dollycutBy'</span>, a:a});
+                }
+              }
+            }
+            <span class="hljs-keyword">break</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-48">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-48">&#182;</a>
+              </div>
+              <p>0 - bezier ‘through’ curve          </p>
+<ul>
+<li>NOTE: bezier() will always fail e2e-spec test because at each run
+the vertices and control points are chosen by Math.random() so
+one run will never match another.</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          <span class="hljs-keyword">case</span> <span class="hljs-number">48</span>:</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-49">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-49">&#182;</a>
+              </div>
+              <p>uses default dur=10 npoints=6</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">if</span>(e.altKey){     <span class="hljs-comment">// alt =&gt; z fly path also</span>
+              a = {d:<span class="hljs-number">20</span>, n:<span class="hljs-number">6</span>, z:<span class="hljs-literal">true</span>};
+            }<span class="hljs-keyword">else</span>{
+              a = {d:<span class="hljs-number">20</span>, n:<span class="hljs-number">6</span>, z:<span class="hljs-literal">false</span>};
+            }
+            camera3d.bezier(a); 
+            log({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'bezier'</span>, a:a});
+            <span class="hljs-keyword">if</span>(record_shots){
+              mediator.record({t:<span class="hljs-string">'camera3d'</span>, f:<span class="hljs-string">'bezier'</span>, a:a});
+            }
+            <span class="hljs-keyword">break</span>;
+
+
+          <span class="hljs-keyword">default</span>:
+        }
+      });
+    }<span class="hljs-comment">//ctor</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-50">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-50">&#182;</a>
+              </div>
+              <p>initialize scene - ‘place’ camera in scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    place(canvasId, template_view, _scope, 
+      _scene, _clearColor, _alpha, _fov) {
+      <span class="hljs-keyword">var</span> index = <span class="hljs-number">0</span>,
+                  sphereGeometry,
+                  sphereMaterial;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-51">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-51">&#182;</a>
+              </div>
+              <p>canvas via passed in canvasId, and passed in scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      canvas = <span class="hljs-built_in">document</span>.getElementById(canvasId);
+      gl = getWebGLContext(canvas);  <span class="hljs-comment">// libs/webGL/cuon-utils.js</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-52">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-52">&#182;</a>
+              </div>
+              <p>gl = canvas.getContext(“webgl”, {premultipliedAlpha: false});
+gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-53">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-53">&#182;</a>
+              </div>
+              <p>initialize reference to NarrativeController scope - for UI sync</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.scope = _scope;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-54">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-54">&#182;</a>
+              </div>
+              <p>pass in procedural Scene or use declarative i3d-svg scene in index.html</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      scene = _scene || <span class="hljs-keyword">new</span> THREE.Scene();</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-55">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-55">&#182;</a>
+              </div>
+              <p>clearColor - default white-transparent</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      clearColor = _clearColor || <span class="hljs-string">'transparent'</span>; 
+      alpha = _alpha || <span class="hljs-number">0.0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-56">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-56">&#182;</a>
+              </div>
+              <p>camerasphere</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      sphereGeometry = <span class="hljs-keyword">new</span> THREE.SphereGeometry(<span class="hljs-number">50</span>,<span class="hljs-number">20</span>,<span class="hljs-number">20</span>);
+      sphereMaterial = <span class="hljs-keyword">new</span> THREE.MeshBasicMaterial({color: <span class="hljs-number">0x7777ff</span>, wireframe: <span class="hljs-literal">true</span>});
+      csphere = <span class="hljs-keyword">new</span> THREE.Mesh(sphereGeometry,sphereMaterial);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-57">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-57">&#182;</a>
+              </div>
+              <p>position the sphere</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      csphere.position.x=<span class="hljs-number">0</span>;
+      csphere.position.y=<span class="hljs-number">0</span>;
+      csphere.position.z=<span class="hljs-number">0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-58">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-58">&#182;</a>
+              </div>
+              <p>camera</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      fov = _fov || <span class="hljs-number">90.0</span>;
+      camera = <span class="hljs-keyword">new</span> THREE.PerspectiveCamera( fov, 
+        <span class="hljs-built_in">window</span>.innerWidth / <span class="hljs-built_in">window</span>.innerHeight, <span class="hljs-number">1</span>, <span class="hljs-number">1000</span> );</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-59">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-59">&#182;</a>
+              </div>
+              <p>default camera.position - could be changed by camera_sphere<br>
+camera.position = {x:csph.pos.x, y:csph.pos.y, z:csph.pos.z + 50}</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      camera.position.x = <span class="hljs-number">0.0</span>;
+      camera.position.y = <span class="hljs-number">0.0</span>;
+      camera.position.z = <span class="hljs-number">50.0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-60">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-60">&#182;</a>
+              </div>
+              <p>add camera to scene<br>
+register camera as actor - for pan tilt roll</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      scene.add(csphere);
+      <span class="hljs-keyword">this</span>.addActorToScene(<span class="hljs-string">'camera'</span>, camera);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-61">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-61">&#182;</a>
+              </div>
+              <p>add camera as child of csphere</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      csphere.add(camera);
+      <span class="hljs-keyword">this</span>.addActorToScene(<span class="hljs-string">'csphere'</span>, csphere);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-62">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-62">&#182;</a>
+              </div>
+              <p>add the sphere to the scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      scene.add(csphere);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-63">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-63">&#182;</a>
+              </div>
+              <p>renderer</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      renderer = <span class="hljs-keyword">new</span> THREE.WebGLRenderer({canvas: canvas, 
+        antialias: <span class="hljs-literal">true</span>, alpha: <span class="hljs-literal">true</span>});</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-64">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-64">&#182;</a>
+              </div>
+              <p>setClearColor(color, alpha) - use passed params (if given)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      renderer.setClearColor(clearColor, alpha);
+      renderer.setSize( <span class="hljs-built_in">window</span>.innerWidth, <span class="hljs-built_in">window</span>.innerHeight );</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-65">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-65">&#182;</a>
+              </div>
+              <p>listen for and handle resize event</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-built_in">window</span>.addEventListener( <span class="hljs-string">'resize'</span>, onWindowResize, <span class="hljs-literal">false</span> );</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-66">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-66">&#182;</a>
+              </div>
+              <p>initial render</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      setTimeout(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">()</span></span>{
+        render();
+      }, <span class="hljs-number">1000</span>);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-67">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-67">&#182;</a>
+              </div>
+              <p>begin camera control animation - in sync with GSAP animation
+this.animate();</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      TweenMax.ticker.addEventListener(<span class="hljs-string">'tick'</span>, render);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-68">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-68">&#182;</a>
+              </div>
+              <p>get narrative reference</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    set_narrative(o){
+      narrative = o;
+    }
+
+    set_mediator(o){
+      mediator = o; <span class="hljs-comment">// ref for mediator.record(actions)</span>
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-69">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-69">&#182;</a>
+              </div>
+              <p>diagnostics</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    examine_matrix(m) {
+      examine_matrix(m);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-70">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-70">&#182;</a>
+              </div>
+              <p>start rendering cycle</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    animate() {
+      requestAnimationFrame(Camera3d.animate);
+      render();
+      <span class="hljs-keyword">if</span>(stats){
+        stats.update();
+      }
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-71">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-71">&#182;</a>
+              </div>
+              <ul>
+<li>NOTE: lights are children of camerasphere - if csphere.visible
+is changed so do all the child lights ?! (it is inherited)
+Instead change csphere.material.visible which does not affect
+child lights. (property is not inherited)</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    toggle_csphere(a){
+      <span class="hljs-keyword">if</span>(csphere){
+        csphere.material.visible = a.val;
+        $timeout(() =&gt; {
+          $rootScope.$apply(() =&gt; {
+            narrative.control_state[<span class="hljs-string">'csph'</span>] = a.val;
+          });
+        });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-72">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-72">&#182;</a>
+              </div>
+              <p>result of narrative.shot logs abs_url, delta_url and shot
+The four values comprise an e2e_spec cell
+The cell-shot is detected by utility ‘e2e_specg’ as a shot (matches
+‘{“delta’) but there is no exact ‘delta’ to trigger shot-processing</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        narrative.shot(<span class="hljs-string">`shot-fixed:{"delta-t":"camera3d", "f":"toggle_csphere", "a":<span class="hljs-subst">${a.val}</span>}`</span>);
+      }
+    }
+    toggle_light(a){
+      <span class="hljs-keyword">if</span>(actors[a.name]){
+        actors[a.name].visible = a.val;
+        $timeout(() =&gt; {
+          $rootScope.$apply(() =&gt; {
+            narrative.control_state[a.name] = a.val;
+          });
+        });</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-73">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-73">&#182;</a>
+              </div>
+              <p>result of narrative.shot logs abs_url, delta_url and shot
+The four values comprise an e2e_spec cell
+The cell-shot is detected by utility ‘e2e_specg’ as a shot (matches
+‘{“delta’) but there is no exact ‘delta’ to trigger shot-processing</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>        narrative.shot(<span class="hljs-string">`shot-fixed:{"delta-t":"camera3d", "f":"toggle_light", "a":{"name":"<span class="hljs-subst">${a.name}</span>","val":<span class="hljs-subst">${a.val}</span>}}`</span>);
+      }
+    }
+
+    light(id){
+      <span class="hljs-keyword">return</span> camera3d.actor(id);
+    }
+
+    csphere(){
+      <span class="hljs-keyword">return</span> csphere;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-74">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-74">&#182;</a>
+              </div>
+              <p>normalize position orientation of csphere and camera - but not zoom</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    center(a){
+      a.d = a.d || <span class="hljs-number">0.0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-75">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-75">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+        timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                 actors:{
+                   <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'y'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'z'</span>:<span class="hljs-number">0.0</span>,
+                                       immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i3d:csphere:position'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'y'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'z'</span>:<span class="hljs-number">0.0</span>,
+                                       immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'y'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'z'</span>:<span class="hljs-number">0.0</span>,
+                                       immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i2d:plane'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>: <span class="hljs-number">0.0</span>, <span class="hljs-string">'y'</span>: <span class="hljs-number">0.0</span>, immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i2d:zoom_plane'</span>:[{dur:a.d, p:{<span class="hljs-string">'rotation'</span>: <span class="hljs-number">0.0</span>,
+                      svgOrigin:<span class="hljs-string">'0% 0%'</span>, immediateRender:<span class="hljs-literal">false</span>}}]
+                 }
+                }<span class="hljs-comment">//tl</span>
+                }<span class="hljs-comment">//delta</span>
+      };<span class="hljs-comment">//shot</span>
+
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-76">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-76">&#182;</a>
+              </div>
+              <p>camera</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      camera.position.x = <span class="hljs-number">0.0</span>;
+      camera.position.y = <span class="hljs-number">0.0</span>;
+      camera.up.x = <span class="hljs-number">0.0</span>;
+      camera.up.y = <span class="hljs-number">1.0</span>;
+      camera.up.z = <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">if</span>(camera.fov !== fov){
+        camera.fov = fov;
+        camera.updateProjectionMatrix();
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-77">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-77">&#182;</a>
+              </div>
+              <p>dynamic trackers</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      roll = <span class="hljs-number">0.0</span>;
+      pan = <span class="hljs-number">0.0</span>;
+      tilt = <span class="hljs-number">0.0</span>;
+      yaw = <span class="hljs-number">0.0</span>;
+      pitch = <span class="hljs-number">0.0</span>;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-78">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-78">&#182;</a>
+              </div>
+              <p>normalize position orientation of csphere and camera - AND zoom</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    home(a){
+      a.d = a.d || <span class="hljs-number">0.0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-79">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-79">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+        timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                 actors:{
+                   <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'y'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'z'</span>:<span class="hljs-number">0.0</span>,
+                                       immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i3d:csphere:position'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'y'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'z'</span>:<span class="hljs-number">0.0</span>,
+                                       immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i3d:csphere:scale'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>:<span class="hljs-number">1.0</span>, <span class="hljs-string">'y'</span>:<span class="hljs-number">1.0</span>, <span class="hljs-string">'z'</span>:<span class="hljs-number">1.0</span>,
+                                       immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'y'</span>:<span class="hljs-number">0.0</span>, <span class="hljs-string">'z'</span>:<span class="hljs-number">0.0</span>,
+                                       immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i2d:plane'</span>:[{dur:a.d, 
+                                   p:{<span class="hljs-string">'x'</span>: <span class="hljs-number">0.0</span>, <span class="hljs-string">'y'</span>: <span class="hljs-number">0.0</span>, immediateRender:<span class="hljs-literal">false</span>}}],
+                   <span class="hljs-string">'i2d:zoom_plane'</span>: [{dur:a.d, p:{rotation: <span class="hljs-number">0.0</span>,
+                   scale:<span class="hljs-number">1.0</span>, svgOrigin:<span class="hljs-string">'0% 0%'</span>, immediateRender:<span class="hljs-literal">false</span>}}]
+                 }
+                }<span class="hljs-comment">//tl</span>
+                }<span class="hljs-comment">//delta</span>
+      };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-80">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-80">&#182;</a>
+              </div>
+              <p>camera</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      camera.position.x = <span class="hljs-number">0.0</span>;
+      camera.position.y = <span class="hljs-number">0.0</span>;
+      camera.up.x = <span class="hljs-number">0.0</span>;
+      camera.up.y = <span class="hljs-number">1.0</span>;
+      camera.up.z = <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">if</span>(camera.fov !== fov){
+        camera.fov = fov;
+        camera.updateProjectionMatrix();
+      }
+      <span class="hljs-keyword">if</span>(csphere.radius !== radius){          
+        csphere.radius = radius;     <span class="hljs-comment">// radius is default 50 </span>
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-81">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-81">&#182;</a>
+              </div>
+              <p>dynamic trackers</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      zoom = <span class="hljs-number">1.0</span>;
+      roll = <span class="hljs-number">0.0</span>;
+      pan = <span class="hljs-number">0.0</span>;
+      tilt = <span class="hljs-number">0.0</span>;
+      yaw = <span class="hljs-number">0.0</span>;
+      pitch = <span class="hljs-number">0.0</span>;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-82">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-82">&#182;</a>
+              </div>
+              <p>ZOOM<br>
+modify csphere.scale </p>
+<ul>
+<li>NOTE: dynamic camera.fov animation updates of three.js 
+camera.updateProjectionMatrix() find an undefined projectionMatrix!<br>
+For this reason zoom is not implemented by camera.fov<br>
+cut - no animation</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    zoomcutTo(a) {  
+      zoom = a.s;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-83">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-83">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:scale'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{x:zoom, y:zoom, z:zoom, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    zoomcutBy(a) {   
+      zoom *= a.s;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-84">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-84">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:scale'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{x:zoom, y:zoom, z:zoom, immediateRender:<span class="hljs-literal">false</span>}}]
+                               }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-85">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-85">&#182;</a>
+              </div>
+              <p>fly - animate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    zoomflyTo(a) {  
+      zoom = a.s;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-86">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-86">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:scale'</span>:[{dur:a.d, 
+                                   p:{x:zoom, y:zoom, z:zoom, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    zoomflyBy(a) {
+      zoom *= a.s;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-87">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-87">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:scale'</span>:[{dur:a.d, 
+                                   p:{x:zoom, y:zoom, z:zoom, immediateRender:<span class="hljs-literal">false</span>}}]
+                               }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-88">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-88">&#182;</a>
+              </div>
+              <p>ROLL<br>
+modify camera.rotation.z<br> 
+cut - no animation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    rollcutTo(a) {  
+      roll = a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-89">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-89">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{z:roll, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    rollcutBy(a) {   
+      roll += a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-90">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-90">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{z:roll, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-91">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-91">&#182;</a>
+              </div>
+              <p>fly - animate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    rollflyTo(a) {  
+      roll = a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-92">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-92">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:a.d, 
+                                   p:{z:roll, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    rollflyBy(a) {   
+      roll += a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-93">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-93">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:a.d, 
+                                   p:{z:roll, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-94">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-94">&#182;</a>
+              </div>
+              <p>PAN/TILT<br>
+modify camera.rotation.y/camera.rotation.x </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    panflyTo(a) {   
+      pan = a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-95">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-95">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:a.d, 
+                                   p:{y:pan, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    panflyBy(a) {   
+      pan += a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-96">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-96">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:a.d, 
+                                   p:{y:pan, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+
+    tiltflyTo(a) {   
+      tilt = a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-97">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-97">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:a.d, 
+                                   p:{x:tilt, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    tiltflyBy(a) {   
+      tilt += a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-98">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-98">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:camera:rotation'</span>:[{dur:a.d, 
+                                   p:{x:tilt, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-99">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-99">&#182;</a>
+              </div>
+              <p>EXAMINE-YAW<br>
+longitudinal examination - rotate csphere around y-axis<br> 
+modify csphere.rotation.y<br>
+cut - no animation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    yawcutTo(a) {  
+      yaw = a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-100">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-100">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{y:yaw, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    yawcutBy(a) {   
+      yaw += a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-101">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-101">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{y:yaw, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-102">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-102">&#182;</a>
+              </div>
+              <p>fly - animate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    yawflyTo(a) {  
+      yaw = a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-103">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-103">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:a.d, 
+                                   p:{y:yaw, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    yawflyBy(a) {   
+      yaw += a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-104">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-104">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:a.d, 
+                                   p:{y:yaw, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-105">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-105">&#182;</a>
+              </div>
+              <p>EXAMINE-PITCH<br>
+lattitudinal examination - rotate csphere around x-axis<br> 
+modify csphere.rotation.x<br>
+cut - no animation</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    pitchcutTo(a) {  
+      pitch = a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-106">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-106">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{x:pitch, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    pitchcutBy(a) {   
+      pitch += a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-107">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-107">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{x:pitch, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-108">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-108">&#182;</a>
+              </div>
+              <p>fly - animate</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    pitchflyTo(a) {  
+      pitch = a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-109">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-109">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:a.d, 
+                                   p:{x:pitch, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    pitchflyBy(a) {   
+      pitch += a.r;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-110">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-110">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:rotation'</span>:[{dur:a.d, 
+                                   p:{x:pitch, immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-111">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-111">&#182;</a>
+              </div>
+              <p>DOLLY - camera translation<br>
+fly - animate (default dur=3.0)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    dollyflyTo(a) {  
+      a.d = a.d || <span class="hljs-number">3.0</span>;
+      a.x = a.x || csphere.position.x;
+      a.y = a.y || csphere.position.y;
+      a.z = a.z || csphere.position.z;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-112">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-112">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:position'</span>:[{dur:a.d, 
+                                   p:{x:a.x, y:a.y, z:a.z, 
+                                   immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    dollyflyBy(a) {
+      a.d = a.d || <span class="hljs-number">3.0</span>;
+      a.x = a.x || <span class="hljs-number">0.0</span>;
+      a.y = a.y || <span class="hljs-number">0.0</span>;
+      a.z = a.z || <span class="hljs-number">0.0</span>;
+      a.x = csphere.position.x + a.x; 
+      a.y = csphere.position.y + a.y; 
+      a.z = csphere.position.z + a.z;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-113">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-113">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:position'</span>:[{dur:a.d, 
+                                   p:{x:a.x, y:a.y, z:a.z, 
+                                   immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-114">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-114">&#182;</a>
+              </div>
+              <p>cut - no animation (dur=0)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    dollycutTo(a) {  
+      a.x = a.x || csphere.position.x;
+      a.y = a.y || csphere.position.y;
+      a.z = a.z || csphere.position.z;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-115">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-115">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:position'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{x:a.x, y:a.y, z:a.z, 
+                                   immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }
+    dollycutBy(a) {
+      a.d = <span class="hljs-number">0.0</span>;
+      a.x = a.x || <span class="hljs-number">0.0</span>;
+      a.y = a.y || <span class="hljs-number">0.0</span>;
+      a.z = a.z || <span class="hljs-number">0.0</span>;
+      a.x = csphere.position.x + a.x; 
+      a.y = csphere.position.y + a.y; 
+      a.z = csphere.position.z + a.z;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-116">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-116">&#182;</a>
+              </div>
+              <p>shot</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+                    timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>},
+                               actors:{
+                                <span class="hljs-string">'i3d:csphere:position'</span>:[{dur:<span class="hljs-number">0</span>, 
+                                   p:{x:a.x, y:a.y, z:a.z, 
+                                   immediateRender:<span class="hljs-literal">false</span>}}]
+                                }
+                              }<span class="hljs-comment">//tl</span>
+                          }<span class="hljs-comment">//delta</span>
+                  };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-117">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-117">&#182;</a>
+              </div>
+              <p>random 2d-bezier camera nav<br> 
+use default 6 points and ‘through’ bezier curve type</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    bezier(a={d:<span class="hljs-number">20</span>, n:<span class="hljs-number">6</span>, z:<span class="hljs-literal">true</span>}){
+      <span class="hljs-keyword">var</span> i,
+          x = [],
+          y = [],
+          z = [],
+          v = [],
+          bezier;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-118">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-118">&#182;</a>
+              </div>
+              <p>bezier ‘through’ curve points - z:true =&gt; fly in z dimension also</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(a.z){
+        z[<span class="hljs-number">0</span>] = <span class="hljs-number">0.0</span>;
+      }
+      x[<span class="hljs-number">0</span>] = <span class="hljs-number">0.0</span>;
+      y[<span class="hljs-number">0</span>] = <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Math</span>.random() &gt; <span class="hljs-number">0.5</span>){
+        x[<span class="hljs-number">1</span>] = <span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();   <span class="hljs-comment">// ++</span>
+        y[<span class="hljs-number">1</span>] = <span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();
+        x[<span class="hljs-number">2</span>] = -<span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();  <span class="hljs-comment">// -+</span>
+        y[<span class="hljs-number">2</span>] = <span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();
+        x[<span class="hljs-number">3</span>] = -<span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();  <span class="hljs-comment">// --</span>
+        y[<span class="hljs-number">3</span>] = -<span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();
+        x[<span class="hljs-number">4</span>] = <span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();  <span class="hljs-comment">// +-</span>
+        y[<span class="hljs-number">4</span>] = -<span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();
+        <span class="hljs-keyword">if</span>(a.z){
+          z[<span class="hljs-number">1</span>] = -<span class="hljs-number">10</span>*<span class="hljs-built_in">Math</span>.random();
+          z[<span class="hljs-number">2</span>] = z[<span class="hljs-number">1</span>] - <span class="hljs-number">30</span>*<span class="hljs-built_in">Math</span>.random();
+          z[<span class="hljs-number">3</span>] = z[<span class="hljs-number">2</span>] + <span class="hljs-number">30</span>*<span class="hljs-built_in">Math</span>.random();
+          z[<span class="hljs-number">4</span>] = -<span class="hljs-number">10</span>*<span class="hljs-built_in">Math</span>.random();
+        }
+      }<span class="hljs-keyword">else</span>{
+        x[<span class="hljs-number">1</span>] = -<span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();   <span class="hljs-comment">// --</span>
+        y[<span class="hljs-number">1</span>] = -<span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();
+        x[<span class="hljs-number">2</span>] = -<span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();  <span class="hljs-comment">// -+</span>
+        y[<span class="hljs-number">2</span>] = <span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();
+        x[<span class="hljs-number">3</span>] = <span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();  <span class="hljs-comment">// ++</span>
+        y[<span class="hljs-number">3</span>] = <span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();
+        x[<span class="hljs-number">4</span>] = <span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();  <span class="hljs-comment">// +-</span>
+        y[<span class="hljs-number">4</span>] = -<span class="hljs-number">30.0</span>*<span class="hljs-built_in">Math</span>.random();
+        <span class="hljs-keyword">if</span>(a.z){
+          z[<span class="hljs-number">1</span>] = -<span class="hljs-number">10</span>*<span class="hljs-built_in">Math</span>.random();
+          z[<span class="hljs-number">2</span>] = z[<span class="hljs-number">1</span>] - <span class="hljs-number">30</span>*<span class="hljs-built_in">Math</span>.random();
+          z[<span class="hljs-number">3</span>] = z[<span class="hljs-number">2</span>] + <span class="hljs-number">30</span>*<span class="hljs-built_in">Math</span>.random();
+          z[<span class="hljs-number">4</span>] = -<span class="hljs-number">10</span>*<span class="hljs-built_in">Math</span>.random();
+        }
+      }
+      x[<span class="hljs-number">5</span>] = <span class="hljs-number">0.0</span>;
+      y[<span class="hljs-number">5</span>] = <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">if</span>(a.z){
+        z[<span class="hljs-number">5</span>] = <span class="hljs-number">0.0</span>;
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-119">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-119">&#182;</a>
+              </div>
+              <p>create values array</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">for</span>(i=<span class="hljs-number">0</span>; i&lt;a.n; i++){
+        <span class="hljs-keyword">if</span>(a.z){
+          v.push({x:x[i], y:y[i], z:z[i]});
+        }<span class="hljs-keyword">else</span>{
+          v.push({x:x[i], y:y[i]});
+        }
+      }
+      bezier = {bezier:{autoRotate:<span class="hljs-literal">true</span>, 
+                        curviness:<span class="hljs-number">2</span>, 
+                        values:v,
+                        immediateRender:<span class="hljs-literal">false</span>}};</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-120">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-120">&#182;</a>
+              </div>
+              <p>shot<br>
+y-coords are webgl </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">this</span>.shot = {delta: {
+        timeline: {p: {paused:<span class="hljs-literal">true</span>, repeat:<span class="hljs-number">0</span>, tweens:[]},
+                   actors:{
+                     <span class="hljs-string">'i3d:csphere:position'</span>:[{dur:a.d, p:bezier}]
+                   }
+                  }<span class="hljs-comment">//tl</span>
+                  }<span class="hljs-comment">//delta</span>
+      };<span class="hljs-comment">//shot</span>
+      <span class="hljs-keyword">this</span>.shot = <span class="hljs-string">'shot-anim:'</span> + <span class="hljs-built_in">JSON</span>.stringify(<span class="hljs-keyword">this</span>.shot);
+      narrative.shot(<span class="hljs-keyword">this</span>.shot);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-121">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-121">&#182;</a>
+              </div>
+              <p>translation on arbitrary axis - transform is relative and cumulative<br>
+axis is Vector3 - will be normalized if not already</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    translateAxisDistance(axis, d){
+      axis.normalize();
+      csphere.translateOnAxis(axis, d);
+      <span class="hljs-keyword">var</span> ax = x_axis.dot(axis);
+      <span class="hljs-keyword">var</span> ay = y_axis.dot(axis);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-122">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-122">&#182;</a>
+              </div>
+              <p>rotate the camerasphere csphere by ordered pitch, yaw, roll</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    rotate(params){
+      <span class="hljs-keyword">var</span> pitch = params.pitch || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> yaw = params.yaw || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> roll = params.roll || <span class="hljs-number">0.0</span>;
+
+      matrixa.makeRotationFromEuler(<span class="hljs-keyword">new</span> THREE.Euler(pitch, yaw, roll));
+      csphere.applyMatrix(matrixa);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-123">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-123">&#182;</a>
+              </div>
+              <p>rotation around arbitraray axis - transform is relative and cumulative<br>
+axis is Vector3 - will be normalized if not already</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    rotateAxisAngle(x,y,z, angle){
+      <span class="hljs-keyword">var</span> axis = <span class="hljs-keyword">new</span> THREE.Vector3(x,y,z);
+      axis.normalize();
+      csphere.rotateOnAxis(axis, angle);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-124">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-124">&#182;</a>
+              </div>
+              <p>relative rotation/scale</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    relRotateScale(params){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-125">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-125">&#182;</a>
+              </div>
+              <p>Object.keys(params).forEach(function(p){
+});</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">var</span> pitch = params.pitch || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> yaw = params.yaw || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> roll = params.roll || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> scale = params.zoom || <span class="hljs-number">1.0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-126">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-126">&#182;</a>
+              </div>
+              <p>all vals</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-127">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-127">&#182;</a>
+              </div>
+              <p>rotate-scale-translate (by x/y/z* scale)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      matrixa.makeRotationFromEuler(<span class="hljs-keyword">new</span> THREE.Euler(pitch, yaw, roll));
+      matrixa.multiplyScalar(scale);  <span class="hljs-comment">// scale</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-128">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-128">&#182;</a>
+              </div>
+              <p>examine_matrix(matrixa);</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-129">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-129">&#182;</a>
+              </div>
+              <p>apply relative rotation-scale to csphere</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      csphere.applyMatrix(matrixa);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-130">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-130">&#182;</a>
+              </div>
+              <p>examine_matrix(csphere.matrix);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-131">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-131">&#182;</a>
+              </div>
+              <p>transform the camerasphere csphere by combination of translation,
+rotation and zoom</p>
+<ul>
+<li>NOTE: params = { tx:x, ty:y, tz:z, pitch:p, yaw:y, roll:r, zoom:z}</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    transform(params){
+      <span class="hljs-built_in">Object</span>.keys(params).forEach(<span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(p)</span></span>{
+      });
+      <span class="hljs-keyword">var</span> x = params.tx || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> y = params.ty || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> z = params.tz || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> pitch = params.pitch || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> yaw = params.yaw || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> roll = params.roll || <span class="hljs-number">0.0</span>;
+      <span class="hljs-keyword">var</span> scale = params.zoom || <span class="hljs-number">1.0</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-132">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-132">&#182;</a>
+              </div>
+              <p>all vals</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-133">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-133">&#182;</a>
+              </div>
+              <p>examine initial csphere matrix</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      examine_matrix(csphere.matrix);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-134">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-134">&#182;</a>
+              </div>
+              <p>absolute translation - matrixb</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      matrixb.makeTranslation(zoom*x, zoom*y, zoom*z);
+      examine_matrix(matrixb);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-135">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-135">&#182;</a>
+              </div>
+              <p>apply absolute translation to csphere</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      csphere.applyMatrix(matrixb);
+      examine_matrix(csphere.matrix);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-136">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-136">&#182;</a>
+              </div>
+              <p>rotate-scale-translate (by x/y/z* scale)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      matrixa.makeRotationFromEuler(<span class="hljs-keyword">new</span> THREE.Euler(pitch, yaw, roll));
+      matrixa.multiplyScalar(scale);  <span class="hljs-comment">// scale</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-137">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-137">&#182;</a>
+              </div>
+              <p>examine_matrix(matrixa);</p>
+
+            </div>
+            
+        </li>
+        
+        
+        <li id="section-138">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-138">&#182;</a>
+              </div>
+              <p>apply relative rotation-scale to csphere</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      csphere.applyMatrix(matrixa);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-139">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-139">&#182;</a>
+              </div>
+              <p>examine_matrix(csphere.matrix);</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-140">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-140">&#182;</a>
+              </div>
+              <p>pan/tilt camera to point at specific actor/billboard<br> 
+no-arg default is to look at center of csphere - camerasphere
+if array lookAt point with abs.coords given by array
+if three numbers then form the Vector3 with those coords</p>
+<ul>
+<li>NOTE: if an array of three numbers a=[x,y,z] is passed in an action, 
+Mediator.exec({t:camera3d, f:lookAt, a:[x.y.z]}) will pull out the
+values and apply them to Camera3d.lookAt(x,y,z)</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    lookAt(id, y, z){
+      <span class="hljs-keyword">if</span>(check.number(id) &amp;&amp; check.number(y) &amp;&amp; check.number(z)){
+        <span class="hljs-keyword">let</span> a = [id,y,z];
+        <span class="hljs-keyword">if</span>(config.unit_test){
+          <span class="hljs-keyword">return</span> a;
+        }<span class="hljs-keyword">else</span>{
+          camera.lookAt(<span class="hljs-keyword">new</span> THREE.Vector3(id, y, z));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-141">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-141">&#182;</a>
+              </div>
+              <p>result of narrative.shot logs abs_url, delta_url and shot
+The four values comprise an e2e_spec cell
+The cell-shot is detected by utility ‘e2e_specg’ as a shot (matches
+‘{“delta’) but there is no exact ‘delta’ to trigger shot-processing</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          narrative.shot(<span class="hljs-string">`shot-fixed:{"delta-t":"camera3d", "f":"lookAt", "a":a}}`</span>);
+        }
+        <span class="hljs-keyword">return</span>;
+      }
+      <span class="hljs-keyword">if</span>(<span class="hljs-built_in">Array</span>.isArray(id)){
+        <span class="hljs-keyword">if</span>(config.unit_test){
+          <span class="hljs-keyword">return</span> id;
+        }<span class="hljs-keyword">else</span>{
+          <span class="hljs-keyword">if</span>(id.length === <span class="hljs-number">3</span>){
+            <span class="hljs-keyword">let</span> a = [id.x, id.y, id.z];
+            camera.lookAt(<span class="hljs-keyword">new</span> THREE.Vector3(id.x, id.y, id.z));</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-142">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-142">&#182;</a>
+              </div>
+              <p>see above</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            narrative.shot(<span class="hljs-string">`shot-fixed:{"delta-t":"camera3d", "f":"lookAt", "a":a}}`</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Camera3d.lookAt:arg.length = <span class="hljs-subst">${id.length}</span>`</span>);
+          }
+        }
+        <span class="hljs-keyword">return</span>;
+      }
+      <span class="hljs-keyword">if</span>(!id){
+        <span class="hljs-keyword">if</span>(config.unit_test){
+          <span class="hljs-keyword">let</span> v = csphere.position;
+          <span class="hljs-keyword">let</span> a = [v.x, v.y, v.z];
+          <span class="hljs-keyword">return</span> a;
+        }<span class="hljs-keyword">else</span>{
+          <span class="hljs-keyword">if</span>(csphere){
+            <span class="hljs-keyword">let</span> v = csphere.position;
+            camera.lookAt(v);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-143">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-143">&#182;</a>
+              </div>
+              <p>see above</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            narrative.shot(<span class="hljs-string">`shot-fixed:{"delta-t":"camera3d", "f":"lookAt", "a":{}}`</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Camera3d.lookAt:csphere is undefined`</span>);
+          }
+        }
+        <span class="hljs-keyword">return</span>;
+      }
+      <span class="hljs-keyword">if</span>(actors[id]){
+        <span class="hljs-keyword">let</span> v = actors[id].position;
+        <span class="hljs-keyword">if</span>(config.unit_test){
+          <span class="hljs-keyword">let</span> a;
+          <span class="hljs-keyword">if</span>(v){
+            a = [v.x, v.y, v.z];
+          }
+          <span class="hljs-keyword">return</span> a;
+        }<span class="hljs-keyword">else</span>{
+          <span class="hljs-keyword">if</span>(v){
+            camera.lookAt(v);</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-144">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-144">&#182;</a>
+              </div>
+              <p>see above</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            narrative.shot(<span class="hljs-string">`shot-fixed:{"delta-t":"camera3d", "f":"lookAt", "a":id}`</span>);
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Camera3d.lookAt:actors[<span class="hljs-subst">${id}</span>].position is undefined`</span>);
+          }
+        }
+        <span class="hljs-keyword">return</span>;
+      }<span class="hljs-keyword">else</span>{
+        <span class="hljs-built_in">console</span>.log(<span class="hljs-string">`!Camera3d.lookAt:actors[<span class="hljs-subst">${id}</span>] does not exist`</span>);
+      }
+      <span class="hljs-keyword">return</span>;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-145">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-145">&#182;</a>
+              </div>
+              <p>camera world pos = csphere.pos + camera.pos is the billboards target</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    billboardsFaceCamera(){
+      billboardsFace = <span class="hljs-literal">true</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-146">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-146">&#182;</a>
+              </div>
+              <p>result of narrative.shot logs abs_url, delta_url and shot
+The four values comprise an e2e_spec cell
+The cell-shot is detected by utility ‘e2e_specg’ as a shot (matches
+‘{“delta’) but there is no exact ‘delta’ to trigger shot-processing</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      narrative.shot(<span class="hljs-string">`shot-fixed:{"delta-t":"camera3d", "f":"billboardsFaceCamera"}`</span>);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-147">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-147">&#182;</a>
+              </div>
+              <p>decouple billboards from possible orientation to actor target</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    billboardsFree(){
+      billboardsFace = <span class="hljs-literal">false</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-148">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-148">&#182;</a>
+              </div>
+              <p>result of narrative.shot logs abs_url, delta_url and shot
+The four values comprise an e2e_spec cell
+The cell-shot is detected by utility ‘e2e_specg’ as a shot (matches
+‘{“delta’) but there is no exact ‘delta’ to trigger shot-processing</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      narrative.shot(<span class="hljs-string">`shot-fixed:{"delta-t":"camera3d", "f":"billboardsFree"}`</span>);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-149">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-149">&#182;</a>
+              </div>
+              <ul>
+<li>NOTE: camera_sphere sets camera.position at csphere position but
+camera.position.z = csphere.position.z + 50 looking to center of csphere</li>
+<li>NOTE: default camera.position = {x:0.0, y:0.0, z:50.0}</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    attachAsSurfaceChild(camerasphere, _radius){
+      camera.position.x = camerasphere.position.x;
+      camera.position.y = camerasphere.position.y;
+      camera.position.z = camerasphere.position.z;
+      camera.position.z += _radius;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-150">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-150">&#182;</a>
+              </div>
+              <p>set radius - keep as const (used in zoom normalization)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      radius = _radius;
+
+      camerasphere.add(camera);
+      camera.name = <span class="hljs-string">'camera'</span>;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-151">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-151">&#182;</a>
+              </div>
+              <p>keep a reference to camerasphere - parent of camera and lights</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      csphere = camerasphere;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-152">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-152">&#182;</a>
+              </div>
+              <p>set dynamic csphere.radius</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      csphere.radius = _radius;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-153">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-153">&#182;</a>
+              </div>
+              <p>add a passed in actor Object3d to scene - register in actors by id<br>
+the scene is an Object3d and is the root of the scenegraph tree</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    addActorToScene(id, o3d, pid){
+      <span class="hljs-keyword">var</span> duplicate = <span class="hljs-literal">false</span>; 
+      scene.traverse((o) =&gt; {
+        <span class="hljs-keyword">if</span>(o.name === id){
+          duplicate = <span class="hljs-literal">true</span>;
+        }
+      });
+      <span class="hljs-keyword">if</span>(duplicate){
+        <span class="hljs-keyword">return</span> <span class="hljs-literal">false</span> ; <span class="hljs-comment">// exception - duplication - don't add bb to bbs list</span>
+      }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-154">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-154">&#182;</a>
+              </div>
+              <p>add to actors list</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(o3d !== scene){
+        o3d.name = id;
+        <span class="hljs-keyword">if</span>(pid &amp;&amp; actors[pid]){
+          actors[pid].add(o3d); <span class="hljs-comment">// add to parent</span>
+        }<span class="hljs-keyword">else</span>{
+          scene.add(o3d);       <span class="hljs-comment">// add as root to scene</span>
+        }
+        actors[id] = o3d;
+        o3d.updateMatrix(); <span class="hljs-comment">//needed?</span>
+      }<span class="hljs-keyword">else</span>{
+      }
+      <span class="hljs-keyword">return</span> <span class="hljs-literal">true</span>;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-155">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-155">&#182;</a>
+              </div>
+              <p>remove actor Object3d from the scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    removeActorFromScene(id){
+      <span class="hljs-keyword">var</span> node = actors[id],
+          p;
+
+      <span class="hljs-keyword">if</span>(node){
+        <span class="hljs-keyword">if</span>(node.parent){
+          p = node.parent;
+          p.remove(node);
+        }<span class="hljs-keyword">else</span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-156">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-156">&#182;</a>
+              </div>
+              <p>prev_scene is the container of all webgl actors to be removed</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>          prev_scene.remove(node);
+        }
+        <span class="hljs-keyword">delete</span> actors[id];
+      }
+    }    
+
+    actor(id){
+      <span class="hljs-keyword">return</span> actors[id] || <span class="hljs-literal">null</span>;
+    }
+    reportActors(){
+      <span class="hljs-keyword">return</span> <span class="hljs-built_in">Object</span>.keys(actors); <span class="hljs-comment">// ids</span>
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-157">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-157">&#182;</a>
+              </div>
+              <p>add a passed in actor/billboard Object3d to the scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    addBillboardToScene(id, o3d, pid){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-158">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-158">&#182;</a>
+              </div>
+              <p>addActor returns true if no webgl duplicate found =&gt; can add to bb list</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.addActorToScene(id, o3d, pid)){
+        billboards[id] = o3d;
+      }
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-159">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-159">&#182;</a>
+              </div>
+              <p>remove actor/billboard Object3d from the scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    removeBillboardFromScene(id){
+      <span class="hljs-keyword">if</span>(billboards[id]){
+        <span class="hljs-keyword">delete</span> billboards[id];
+      }
+      <span class="hljs-keyword">this</span>.removeActorFromScene(id);
+    }
+
+    billboard(id){
+      <span class="hljs-keyword">return</span> billboards[id] || <span class="hljs-literal">null</span>;
+    }
+    reportBillboards(){
+      <span class="hljs-keyword">return</span> <span class="hljs-built_in">Object</span>.keys(billboards); <span class="hljs-comment">// ids</span>
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-160">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-160">&#182;</a>
+              </div>
+              <p>remove current scene</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    changeTemplateScene(template, _scene){
+      prev_scene = scene; <span class="hljs-comment">// used to remove scene-actor children</span>
+      scene = _scene || (<span class="hljs-keyword">new</span> THREE.Scene());
+      scene.name = template;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-161">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-161">&#182;</a>
+              </div>
+              <p>setClearColor(color, alpha)</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>      renderer.setClearColor(clearColor, alpha);
+      renderer.setSize( <span class="hljs-built_in">window</span>.innerWidth, <span class="hljs-built_in">window</span>.innerHeight );
+      renderer.render(scene, camera);
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-162">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-162">&#182;</a>
+              </div>
+              <p>get webgl rendering context</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    gl(){
+      <span class="hljs-keyword">return</span> gl;
+    }
+  }<span class="hljs-comment">//class Camera3d</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-163">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-163">&#182;</a>
+              </div>
+              <p>return factory object<br>
+(redundant) maintenance of Singleton</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">if</span>(!camera3d){
+    camera3d = <span class="hljs-keyword">new</span> Camera3d();  <span class="hljs-comment">// create Camera3d singleton instance once</span>
+  }
+  <span class="hljs-keyword">return</span> camera3d;   <span class="hljs-comment">// return ref to single instance</span>
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

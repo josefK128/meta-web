@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>models-service.js</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="..\docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>models-service.js</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <ul>
+<li>models-service.js</li>
+<li><p>returns stored model objects - presently loaded within the ‘universe’
+of templates, models and assets accessible in the application namespace</p>
+</li>
+<li><p>@dependencies: config<br>
+@param {index.html} Angular object value ‘config’<br>
+@ngInject</p>
+</li>
+<li><p>NOTE: ngInject is used by ngAnnotate to generate a 
+minification-safe injection annotation such as:
+<code>function($scope) =&gt; [&#39;$scope&#39;, function($scope){}]</code></p>
+</li>
+<li>@TODO return model as Promise</li>
+<li>@TODO: if model is not cached locally request it via Mediator ws-channel</li>
+</ul>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>
+
+angular.module(<span class="hljs-string">'app'</span>).factory(<span class="hljs-string">"Models"</span>, <span class="hljs-function"><span class="hljs-keyword">function</span><span class="hljs-params">(config)</span></span>{
+<span class="hljs-pi">  "use strict"</span>;
+
+  <span class="hljs-keyword">var</span> models;</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p><code>this.models</code> is a collection of named data descriptors for creating views<br>
+Each model is associated with a template which can have many models<br>
+The models ‘universe’ and associations with templates is composed in 
+a named angular value object ‘config’ defined in index.html</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-class"><span class="hljs-keyword">class</span> <span class="hljs-title">Models</span> </span>{
+    constructor() {
+      <span class="hljs-keyword">this</span>.models = config.models;
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>fetch model by name<br>
+Expect name = template:model where model is almost always defined <br>
+If model is not defined return the single unnamed model for the template<br>
+If model is defined return the specific named model (from &gt;=2) for the template<br>
+If no type or template or named model return {}</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    get(type, template, model){
+      <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.models[type] &amp;&amp; template){
+        <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.models[type][template]){
+          <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.models[type][template][model]){
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.models[type][template][model]; <span class="hljs-comment">// one of many this.models for tpl</span>
+          }<span class="hljs-keyword">else</span>{
+            <span class="hljs-keyword">return</span> <span class="hljs-keyword">this</span>.models[type][template]; <span class="hljs-comment">// single model for template </span>
+          }
+        }<span class="hljs-keyword">else</span>{
+          <span class="hljs-keyword">return</span> {};
+        }
+      }
+      <span class="hljs-keyword">return</span> {};
+    }</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>cache template model for future fetch<br>
+<code>this.models[type][template][model] = o;</code></p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>    put(type, template, model, o){
+      <span class="hljs-keyword">if</span>(<span class="hljs-keyword">this</span>.models[type]){
+        <span class="hljs-keyword">if</span>(template){
+          <span class="hljs-keyword">if</span>(model){</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>one of many this.models for tpl</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">this</span>.models[type][template][model] = o || {}; 
+          }<span class="hljs-keyword">else</span>{</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-6">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-6">&#182;</a>
+              </div>
+              <p>single model for template </p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>            <span class="hljs-keyword">this</span>.models[type][template] = o || {};
+          }
+        }<span class="hljs-keyword">else</span>{
+          <span class="hljs-keyword">throw</span> <span class="hljs-string">"template-name MUST be provided!"</span>;
+        }
+      }<span class="hljs-keyword">else</span>{
+        <span class="hljs-keyword">throw</span> <span class="hljs-string">`this.models[<span class="hljs-subst">${type}</span>] does NOT exist!`</span>;
+      }
+    } <span class="hljs-comment">// caches model for future local fetch</span>
+  }<span class="hljs-comment">//Models</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-7">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-7">&#182;</a>
+              </div>
+              <p>return factory object<br>
+(redundant) maintenance of Singleton</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>  <span class="hljs-keyword">if</span>(!models){
+    models = <span class="hljs-keyword">new</span> Models();  <span class="hljs-comment">// create Models singleton instance</span>
+  }
+  <span class="hljs-keyword">return</span> models;            <span class="hljs-comment">// return Models singleton instance</span>
+});</pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>

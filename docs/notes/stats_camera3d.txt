@@ -1,0 +1,33 @@
+// Camera3d
+
+  // start stats tracking - fps  
+  $(window).load(function(){ 
+    // fps
+    stats = (function(){
+      var stats = new Stats();
+      console.log("stats = " + stats);
+      stats.setMode(0); // 0: fps, 1: ms
+      // Align top-left
+      //stats.domElement.style.position = 'relative';
+      //stats.domElement.style.left = '0px';
+      //stats.domElement.style.top = '0px';
+      //console.log("stats.domElement = " + stats.domElement);
+      //$("#stats").append( stats.domElement );
+      $("#stats").html( stats.domElement ); // replace current contents of div
+      return stats;
+    })(); 
+  });
+
+
+  // return factory object Camera3d
+  var Camera3d = {
+
+    // start rendering cycle
+    animate: function() {
+      requestAnimationFrame(Camera3d.animate);
+      render();
+      if(stats){
+        stats.update();
+      }
+    },
+

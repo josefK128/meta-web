@@ -1,0 +1,241 @@
+"use strict";
+angular.module('app').factory('StateDescriptors', ['Mediator', function(Mediator) {
+  "use strict";
+  console.log("\nStateDescriptors service defined");
+  var descriptors = {
+    i3dmetaforms: {
+      scene2D: {
+        id: "opening2D",
+        score: [],
+        actors: {bitmap: {}}
+      },
+      scene3D: {
+        id: "metaforms3D",
+        score: [],
+        actors: {
+          metaforms: {tree0: {
+              form: "i3d-sphere",
+              x: 0.0,
+              y: 50.0,
+              z: 0.0,
+              r: 10.0,
+              visible: true,
+              wireframe: true,
+              transparent: false,
+              opacity: 1.0,
+              color: "red",
+              children: {
+                0: {
+                  form: "i3d-sphere",
+                  x: -50.0,
+                  y: 100.0,
+                  z: 0.0,
+                  r: 10.0,
+                  visible: true,
+                  wireframe: true,
+                  transparent: false,
+                  opacity: 1.0,
+                  color: "red",
+                  children: {}
+                },
+                1: {
+                  form: "i3d-sphere",
+                  x: 50.0,
+                  y: 100.0,
+                  z: 0.0,
+                  r: 10.0,
+                  visible: true,
+                  wireframe: true,
+                  transparent: false,
+                  opacity: 1.0,
+                  color: "red",
+                  children: {}
+                }
+              }
+            }},
+          tree1: {
+            form: "i3d-sphere",
+            x: 0.0,
+            y: 100.0,
+            z: 0.0,
+            r: 10.0,
+            visible: true,
+            wireframe: true,
+            transparent: false,
+            opacity: 1.0,
+            color: "red",
+            children: {
+              0: {
+                form: "i3d-sphere",
+                x: -50.0,
+                y: 150.0,
+                z: 0.0,
+                r: 10.0,
+                visible: true,
+                wireframe: true,
+                transparent: false,
+                opacity: 1.0,
+                color: "red",
+                children: {}
+              },
+              1: {
+                form: "i3d-sphere",
+                x: 50.0,
+                y: 150.0,
+                z: 0.0,
+                r: 10.0,
+                visible: true,
+                wireframe: true,
+                transparent: false,
+                opacity: 1.0,
+                color: "red",
+                children: {}
+              }
+            }
+          },
+          csphere: {
+            x: 0.0,
+            y: 0.0,
+            z: 0.0,
+            r: 50.0,
+            visible: true,
+            wireframe: true,
+            transparent: false,
+            opacity: 1.0,
+            color: "red"
+          },
+          axes: {axes0: {length: 3000.0}},
+          alights: {alight0: {color: "0x222222"}},
+          alight1: {color: "0xff0000"},
+          dlights: {
+            dlight0: {
+              color: "0xffffff",
+              directionx: 1,
+              directiony: 1,
+              directionz: 1
+            },
+            dlight1: {
+              color: "0x002288",
+              directionx: -1,
+              directiony: -1,
+              directionz: -1
+            }
+          },
+          dlight2: {
+            color: "0x00ff00",
+            directionx: 1,
+            directiony: -1,
+            directionz: -1
+          },
+          grounds: {
+            ground0: {
+              x: 0.0,
+              y: -50.0,
+              z: 0.0,
+              textureurl: "./images/p2.jpg",
+              color: "0xffffff",
+              transparent: true,
+              opacity: 0.6,
+              width: 50.0,
+              height: 50.0
+            },
+            ground1: {
+              x: 0.0,
+              y: 0.0,
+              z: 0.0,
+              color: "blue",
+              transparent: true,
+              opacity: 0.7,
+              width: 50.0,
+              height: 50.0
+            }
+          },
+          ground2: {
+            x: 0.0,
+            y: -100.0,
+            z: 0.0,
+            color: "red",
+            transparent: true,
+            opacity: 0.7,
+            width: 50.0,
+            height: 50.0
+          },
+          cubes: {
+            cube0: {
+              x: -4.0,
+              y: 4.0,
+              z: 20.0,
+              textureurl: "./images/sky.jpg",
+              width: 4.0,
+              height: 4.0,
+              depth: 4.0
+            },
+            cube1: {
+              x: 4.0,
+              y: 10.0,
+              z: 20.0,
+              color: "green",
+              transparent: true,
+              opacity: 0.6,
+              width: 4.0,
+              height: 4.0,
+              depth: 4.0
+            }
+          },
+          cube2: {
+            x: -4.0,
+            y: 14.0,
+            z: 20.0,
+            textureurl: "./images/sky.jpg",
+            width: 4.0,
+            height: 4.0,
+            depth: 4.0
+          },
+          spheres: {
+            sphere0: {
+              x: 20.0,
+              y: 4.0,
+              z: 4.0,
+              textureurl: "./images/1.png",
+              r: 4.0,
+              wsegments: 20.0,
+              hsegments: 20.0,
+              color: "white"
+            },
+            sphere1: {
+              x: -20.0,
+              y: 4.0,
+              z: 4.0,
+              r: 4.0,
+              wsegments: 20.0,
+              hsegments: 20.0,
+              opacity: 0.5,
+              color: "red",
+              transparent: true
+            }
+          },
+          sphere2: {
+            x: -20.0,
+            y: 14.0,
+            z: 4.0,
+            r: 4.0,
+            wsegments: 20.0,
+            hsegments: 20.0,
+            opacity: 0.5,
+            color: "red",
+            transparent: true
+          },
+          bb_singular: {
+            url: "./images/snow_posZ.jpg",
+            x: 20,
+            y: 20,
+            z: -10,
+            width: 50,
+            height: 50,
+            aspect: true
+          },
+          billboards: {}
+        }
+      }
+    },
+
