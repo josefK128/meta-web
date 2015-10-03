@@ -1,0 +1,33 @@
+# Include your project-specific ignores in this file
+# Read about how to use .gitignore: 
+# https://help.github.com/articles/ignoring-files
+
+
+# node_modules - build locally from package.json
+# root> npm install --savedev
+# these files are development only
+# NOTE: app/libs from bower.json are app-dependencies
+# app/libs is built 
+# root> bower install --S
+node_modules/
+
+# docs - can be created via 'gulp docco'
+docs/
+
+# logs - created by setting index.html config
+logs/
+
+# history - can be created by 'gulp save-versions'
+history/
+
+# app/build - can be created by 'gulp build' 'gulp build-min'
+app/build/
+
+# app/text-file-reminders
+app/*.txt
+
+
+# vim swp-files
+/**/*.swp
+
+
