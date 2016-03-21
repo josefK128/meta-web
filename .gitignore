@@ -9,19 +9,20 @@
 # NOTE: app/libs from bower.json are app-dependencies
 # app/libs is built 
 # root> bower install --S
-node_modules/
+node_modules
+app/lib
 
 # docs - can be created via 'gulp docco'
-docs/
+docs
 
 # logs - created by setting index.html config
-logs/
+logs
 
 # history - can be created by 'gulp save-versions'
-history/
+history
 
 # app/build - can be created by 'gulp build' 'gulp build-min'
-app/build/
+app/build
 
 # app/text-file-reminders
 app/*.txt
